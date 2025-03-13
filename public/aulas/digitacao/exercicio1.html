@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercício de Digitação</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+        }
+
+        .text-box {
+            font-size: 18px;
+            background-color: #f3f3f3;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: left;
+        }
+
+        .input-box {
+            width: 100%;
+            padding: 10px;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+
+        .error {
+            background-color: rgba(255, 0, 0, 0.3);
+            padding: 2px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Teste sua Digitação</h1>
+        <p class="text-box" id="text-to-type">A prática leva à perfeição. Continue treinando!</p>
+        <textarea id="user-input" class="input-box" rows="3" placeholder="Comece a digitar..."></textarea>
+        <p id="typed-text" class="text-box"></p> <!-- Adicionado -->
+        <p id="feedback"></p>
+        <p id="stats"></p>
+        <label>
+            <input type="checkbox" id="allow-errors" checked>
+            Permitir continuar com erros
+        </label>
+        <br>
+        <button onclick="restartGame()">Reiniciar</button>
+    </div>
+
+    <script>
+    let startTime;
+    let correctKeystrokes = 0;
+    let errorCount = 0;
+    const textToType = document.getElementById("text-to-type").innerText;
+    const userInput = document.getElementById("user-input");
+    const feedback = document.getElementById("feedback");
+    const stats = document.getElementById("stats");
+    const allowErrors = document.getElementById("allow-errors");
+    const typedTextElem = document.getElementById("typed-text");
+
+    // Captura o nome do usuário armazenado no login
+    const loggedUser = localStorage.getItem("loggedUser");
+
+    userInput.addEventListener("input", function (event) {
+        if (!startTime) startTime = new Date();
+        checkTyping(event);
+    });
+
+    function checkTyping(event) {
+        const typedText = userInput.value;
+        let correct = "";
+        let incorrect = "";
+        let hasError = false;
+        correctKeystrokes = 0;
+        errorCount = 0;
+
+        for (let i = 0; i < typedText.length; i++) {
+            if (typedText[i] === textToType[i]) {
+                correct += typedText[i];
+                correctKeystrokes++;
+            } else {
+                incorrect += `<span class='error'>${typedText[i]}</span>`;
+                hasError = true;
+                errorCount++;
+                if (!allowErrors.checked && textToType[i] !== undefined && typedText[i] !== textToType[i]) {
+                    userInput.value = typedText.slice(0, -1);
+                    return;
+                }
+            }
+        }
+
+        typedTextElem.innerHTML = correct + incorrect;
+
+        if (typedText.length === textToType.length) {
+            const timeTaken = (new Date() - startTime) / 1000;
+            const avgTimePerKey = timeTaken / correctKeystrokes;
+            const wpm = (correctKeystrokes / 5) / (timeTaken / 60);
+
+            stats.innerHTML = `
+                <p>Tempo total: ${timeTaken.toFixed(2)} segundos</p>
+                <p>Tempo médio por tecla correta: ${avgTimePerKey.toFixed(2)} segundos</p>
+                <p>Número de erros: ${errorCount}</p>
+                <p>Velocidade: ${wpm.toFixed(1)} palavras por minuto</p>
+            `;
+
+            feedback.innerHTML = `<p>Parabéns! Você completou em ${timeTaken.toFixed(2)} segundos.</p>`;
+
+            // Enviar os dados do exercício para o servidor
+            saveTypingResults(loggedUser, timeTaken, correctKeystrokes, errorCount, wpm);
+        }
+    }
+
+    // Função para salvar resultados de digitação
+function saveTypingResults(time, keystrokes, errors, wpm) {
+    const userData = JSON.parse(localStorage.getItem("loggedUser"));
+    
+    if (!userData || !userData.username) {
+        alert("Erro: Usuário não encontrado no localStorage. Faça login novamente.");
+        return;
+    }
+
+    const resultData = {
+        user: userData.username, // Nome do usuário
+        time,
+        keystrokes,
+        errors,
+        wpm,
+        date: new Date().toISOString()
+    };
+
+    fetch("/save-typing-results", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(resultData) // Envia os dados para o servidor
+    }).then(response => response.json())
+      .then(data => {
+          if (data.success) {
+              alert("Resultados salvos com sucesso!");
+          } else {
+              alert("Erro ao salvar resultados: " + data.error);
+          }
+      })
+      .catch(error => console.error("Erro ao salvar resultados:", error));
+}
+
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,32 @@
+<!-- Tela de Cadastro -->
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <title>Sistema de Gerenciamento de Formulários</title>
+</head>
+<body>
+
+    <div id="login-container" class="container">
+        <h2>Login</h2>
+        <input type="text" id="login-username" placeholder="Nome completo" required>
+        <input type="password" id="login-password" placeholder="Data de nascimento (dd/mm/aaaa)" required>
+        <button onclick="login()">Entrar</button>
+        <p>Ainda não tem uma conta? <a href="javascript:void(0)" onclick="toggleForms()">Cadastrar-se</a></p>
+    </div>
+
+    <div id="signup-container" class="container" style="display: none;">
+        <h2>Cadastrar-se</h2>
+        <input type="text" id="signup-name" placeholder="Nome completo" required>
+        <input type="text" id="signup-group" placeholder="Grupo" required>
+        <input type="date" id="signup-dob" placeholder="Data de nascimento" required>
+        <button onclick="signup()">Cadastrar</button>
+        <p>Já tem uma conta? <a href="javascript:void(0)" onclick="toggleForms()">Login</a></p>
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
