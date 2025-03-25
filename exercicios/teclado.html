@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercício de Digitação</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+            background-color: #f4f4f4;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            margin: auto;
+        }
+
+        .text-box {
+            font-size: 24px;
+            background-color: #f3f3f3;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .input-box {
+            width: 80%;
+            padding: 15px;
+            font-size: 18px;
+            margin-top: 10px;
+            border: 2px solid #007BFF;
+            border-radius: 5px;
+            outline: none;
+            resize: none;
+        }
+
+        .input-box:focus {
+            border-color: #0056b3;
+        }
+
+        .feedback {
+            margin-top: 15px;
+            font-size: 18px;
+            text-align: left;
+            min-height: 27px;
+        }
+
+        .error {
+            color: red;
+            text-decoration: underline;
+        }
+
+        .correct {
+            color: green;
+        }
+
+        .stats {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e9f5ff;
+            border-radius: 5px;
+        }
+
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .controls {
+            margin: 20px 0;
+        }
+
+        .completed {
+            color: #007BFF;
+            font-size: 24px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .loading {
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Exercício de Digitação</h1>
+
+        <div class="text-box" id="text-to-type">Carregando palavras...</div>
+        <textarea id="user-input" class="input-box" rows="3" placeholder="Aguarde enquanto carregamos as palavras..."
+            disabled></textarea>
+
+        <div class="feedback" id="feedback"></div>
+
+        <div class="controls">
+            <label>
+                <input type="checkbox" id="allow-errors" checked>
+                Permitir continuar com erros
+            </label>
+            <button id="next-btn" onclick="nextWord()" disabled>Próxima Palavra</button>
+            <button onclick="restartGame()">Reiniciar</button>
+        </div>
+
+        <div class="stats" id="stats"></div>
+        <div id="completed-message" class="completed"></div>
+    </div>
+
+    <a href="../dados/palavras.json"></a>
+
+    <script>
+        // Variáveis globais
+        let words = [];
+        let currentWordIndex = 0;
+        let startTime;
+        let correctKeystrokes = 0;
+        let errorCount = 0;
+
+        // Elementos DOM
+        const userInput = document.getElementById("user-input");
+        const feedback = document.getElementById("feedback");
+        const stats = document.getElementById("stats");
+        const allowErrors = document.getElementById("allow-errors");
+        const completedMessage = document.getElementById("completed-message");
+        const textToTypeElement = document.getElementById("text-to-type");
+        const nextBtn = document.getElementById("next-btn");
+
+        // Carregar palavras do JSON
+        async function loadWords() {
+            try {
+                const response = await fetch('../dados/palavras.json');
+                if (!response.ok) {
+                    throw new Error('Falha ao carregar palavras');
+                }
+                const data = await response.json();
+                words = data.palavras || data; // Aceita tanto {palavras: [...]} quanto [...]
+
+                if (words.length === 0) {
+                    throw new Error('Nenhuma palavra encontrada no arquivo');
+                }
+
+                showWord();
+                userInput.placeholder = "Comece a digitar...";
+                userInput.disabled = false;
+                nextBtn.disabled = false;
+            } catch (error) {
+                console.error('Erro ao carregar palavras:', error);
+                textToTypeElement.textContent = "Erro ao carregar palavras. Usando lista padrão.";
+
+                // Lista padrão caso o JSON falhe
+                words = [
+                    "teclado",
+                    "computador",
+                    "digitação",
+                    "aprendizado",
+                    "programação",
+                    "A prática leva à perfeição",
+                    "Continue treinando suas habilidades",
+                    "Digitação rápida é uma habilidade valiosa"
+                ];
+
+                setTimeout(() => {
+                    showWord();
+                    userInput.placeholder = "Comece a digitar...";
+                    userInput.disabled = false;
+                    nextBtn.disabled = false;
+                }, 2000);
+            }
+        }
+
+        function showWord() {
+            if (currentWordIndex < words.length) {
+                textToTypeElement.textContent = words[currentWordIndex];
+                userInput.value = "";
+                feedback.textContent = "";
+                stats.textContent = "";
+                completedMessage.textContent = "";
+                startTime = null;
+                correctKeystrokes = 0;
+                errorCount = 0;
+                userInput.focus();
+            } else {
+                completedMessage.textContent = "Parabéns! Você concluiu todos os exercícios!";
+                userInput.disabled = true;
+                nextBtn.disabled = true;
+            }
+        }
+
+        userInput.addEventListener("input", function (event) {
+            if (!startTime) startTime = new Date();
+            checkTyping();
+        });
+
+        function checkTyping() {
+            const typedText = userInput.value;
+            const currentWord = words[currentWordIndex];
+            let correct = "";
+            let incorrect = "";
+            let hasError = false;
+            correctKeystrokes = 0;
+            errorCount = 0;
+
+            for (let i = 0; i < typedText.length; i++) {
+                if (typedText[i] === currentWord[i]) {
+                    correct += typedText[i];
+                    correctKeystrokes++;
+                } else {
+                    incorrect += `<span class='error'>${typedText[i]}</span>`;
+                    hasError = true;
+                    errorCount++;
+                    if (!allowErrors.checked) {
+                        userInput.value = typedText.slice(0, -1);
+                        return;
+                    }
+                }
+            }
+
+            feedback.innerHTML = correct + incorrect;
+
+            if (typedText === currentWord) {
+                const timeTaken = (new Date() - startTime) / 1000;
+                const wpm = Math.round((currentWord.length / 5) / (timeTaken / 60));
+                const accuracy = Math.round((correctKeystrokes / (correctKeystrokes + errorCount)) * 100);
+
+                stats.innerHTML = `
+                    <p>Tempo: ${timeTaken.toFixed(2)} segundos</p>
+                    <p>Velocidade: ${wpm} PPM (palavras por minuto)</p>
+                    <p>Precisão: ${accuracy}%</p>
+                    <p>Erros: ${errorCount}</p>
+                `;
+
+                feedback.innerHTML += `<p class="correct">Correto! Pressione "Próxima Palavra" para continuar.</p>`;
+            }
+        }
+
+        function nextWord() {
+            currentWordIndex++;
+            showWord();
+        }
+
+        function restartGame() {
+            currentWordIndex = 0;
+            showWord();
+            userInput.disabled = false;
+            nextBtn.disabled = false;
+        }
+
+        // Iniciar o jogo carregando as palavras
+        loadWords();
+    </script>
+</body>
+
+</html>
