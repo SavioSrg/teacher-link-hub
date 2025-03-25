@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercícios de Informática</title>
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+
+<body>
+    <header>
+        <h1>Exercícios de Informática</h1>
+        <p>Pratique e teste seus conhecimentos!</p>
+        <nav>
+            <a href="index.html">🏠 Início</a>
+            <a href="exercicios.html?categoria=windows">🖥 Windows</a>
+            <a href="exercicios.html?categoria=word">📝 Word</a>
+            <a href="exercicios.html?categoria=excel">📊 Excel</a>
+        </nav>
+    </header>
+
+    <main>
+        <h2 id="titulo-categoria">Carregando...</h2>
+
+        <!-- Menu com números das questões -->
+        <div id="menu-questoes">
+            <!-- Os números das questões serão carregados dinamicamente aqui -->
+        </div>
+
+        <!-- Questões serão exibidas aqui -->
+        <div id="exercicios">
+            <!-- As perguntas serão carregadas dinamicamente aqui -->
+        </div>
+    </main>
+
+    <script src="assets/js/loadQuestions.js"></script>
+    <script>
+        async function carregarPerguntas(categoria) {
+            try {
+                // Carrega os dados do arquivo JSON
+                let resposta = await fetch("dados/perguntas.json");
+                let dados = await resposta.json();
+
+                let perguntas = dados[categoria] || [];
+                let container = document.getElementById("exercicios");
+                let menu = document.getElementById("menu-questoes");
+                let tituloCategoria = document.getElementById("titulo-categoria");
+
+                tituloCategoria.textContent = `Exercícios de ${categoria.charAt(0).toUpperCase() + categoria.slice(1)}`;
+
+                container.innerHTML = "";
+                menu.innerHTML = "";
+
+                perguntas.forEach((questao, index) => {
+                    // Adiciona um botão no menu com o número da questão
+                    let menuItem = document.createElement("button");
+                    menuItem.textContent = index + 1;
+                    menuItem.classList.add("menu-item");
+                    menuItem.setAttribute("data-index", index);
+                    menuItem.addEventListener("click", () => mostrarQuestao(index));
+
+                    menu.appendChild(menuItem);
+
+                    // Cria cada questão, mas deixa todas ocultas inicialmente
+                    let div = document.createElement("div");
+                    div.classList.add("pergunta");
+                    div.classList.add("ocultar");
+                    div.setAttribute("data-index", index);
+
+                    let html = `<h3>${index + 1}. ${questao.pergunta}</h3><ul>`;
+                    questao.alternativas.forEach((alt, i) => {
+                        html += `<li><button class="opcao" data-escolhida="${i}" data-correta="${parseInt(questao.correta)}">${alt}</button></li>`;
+                    });
+                    html += `</ul><p class="resposta"></p>`;
+
+                    div.innerHTML = html;
+                    container.appendChild(div);
+
+                    // Adiciona o evento de clique para verificar a resposta
+                    document.querySelectorAll(".opcao").forEach(botao => {
+                        botao.addEventListener("click", function () {
+                            verificarResposta(this, parseInt(this.dataset.escolhida), parseInt(this.dataset.correta));
+                        });
+                    });
+                });
+
+                // Exibe a primeira questão por padrão
+                mostrarQuestao(0);
+
+            } catch (erro) {
+                console.error("Erro ao carregar perguntas:", erro);
+            }
+        }
+
+        // Função para mostrar a questão
+        function mostrarQuestao(index) {
+            // Esconde todas as questões
+            document.querySelectorAll(".pergunta").forEach(questao => {
+                questao.classList.add("ocultar");
+            });
+
+            // Exibe a questão correspondente
+            let questaoVisivel = document.querySelector(`.pergunta[data-index="${index}"]`);
+            if (questaoVisivel) {
+                questaoVisivel.classList.remove("ocultar");
+            }
+
+            // Marca o menu
+            document.querySelectorAll(".menu-item").forEach(item => {
+                item.classList.remove("ativo");
+            });
+            let menuItemAtivo = document.querySelector(`.menu-item[data-index="${index}"]`);
+            if (menuItemAtivo) {
+                menuItemAtivo.classList.add("ativo");
+            }
+        }
+
+        // Função para verificar se a resposta está correta
+        function verificarResposta(botao, escolhida, correta) {
+            let resposta = botao.closest(".pergunta").querySelector(".resposta");
+
+            if (escolhida === correta) {
+                resposta.textContent = "✅ Resposta correta!";
+                resposta.style.color = "green";
+            } else {
+                resposta.textContent = "❌ Resposta errada! Tente novamente.";
+                resposta.style.color = "red";
+            }
+        }
+
+        // Obtém a categoria da URL e carrega os exercícios
+        const urlParams = new URLSearchParams(window.location.search);
+        const categoria = urlParams.get("categoria") || "windows";
+        carregarPerguntas(categoria);
+        
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,55 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    margin: 20px;
+}
+
+header {
+    background-color: #4CAF50;
+    color: white;
+    padding: 15px;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+li {
+    margin: 10px 0;
+}
+
+button {
+    padding: 10px;
+    margin: 5px;
+    cursor: pointer;
+}
+
+/* Estilo para o menu das questões */
+#menu-questoes {
+    margin-bottom: 20px;
+}
+
+.menu-item {
+    padding: 5px 10px;
+    margin: 0 5px;
+    cursor: pointer;
+}
+
+.menu-item.ativo {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.pergunta {
+    display: none;
+}
+
+.pergunta.ocultar {
+    display: none;
+}
+
+/* Estilo para quando a pergunta for visível */
+.pergunta:not(.ocultar) {
+    display: block;
+}

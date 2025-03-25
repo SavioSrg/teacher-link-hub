@@ -1,0 +1,41 @@
+{
+    "windows": [
+        {
+            "pergunta": "Qual é o atalho para copiar um texto no Windows?",
+            "alternativas": [
+                "Ctrl + X",
+                "Ctrl + C",
+                "Ctrl + V"
+            ],
+            "correta": 1
+        },
+        {
+            "pergunta": "Qual tecla usamos para atualizar uma página no navegador?",
+            "alternativas": [
+                "F5",
+                "Ctrl + R",
+                "Alt + Tab"
+            ],
+            "correta": 0
+        },
+        {
+            "pergunta": "O que é o Windows?",
+            "alternativas": ["Sistema Operacional", "Programação", "Hardware", "Rede"],
+            "correta": 0
+        },
+        {
+            "tipo": "digitacao"
+        }
+    ],
+    "word": [
+        {
+            "pergunta": "Qual atalho permite salvar um documento no Word?",
+            "alternativas": [
+                "Ctrl + P",
+                "Ctrl + S",
+                "Ctrl + Z"
+            ],
+            "correta": 1
+        }
+    ]
+}
