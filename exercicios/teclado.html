@@ -100,11 +100,51 @@
             color: #666;
             font-style: italic;
         }
+
+        .user-info {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #e9f5ff;
+            border-radius: 5px;
+            text-align: left;
+        }
+
+        .user-info label {
+            font-weight: bold;
+        }
+
+        .user-info input {
+            padding: 8px;
+            margin: 0 10px;
+            border: 1px solid #007BFF;
+            border-radius: 4px;
+        }
+
+        .user-info button {
+            padding: 8px 15px;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        #name-feedback {
+            color: green;
+            margin-top: 5px;
+        }
     </style>
 </head>
 
 <body>
     <div class="container">
+        <!-- Seção do Nome do Usuário -->
+        <div class="user-info">
+            <label>
+                Seu Nome:
+                <input type="text" id="user-name" placeholder="Digite seu nome">
+                <button onclick="saveUserName()">Salvar</button>
+            </label>
+            <p id="name-feedback"></p>
+        </div>
+
         <h1>Exercício de Digitação</h1>
 
         <div class="text-box" id="text-to-type">Carregando palavras...</div>
@@ -135,6 +175,8 @@
         let startTime;
         let correctKeystrokes = 0;
         let errorCount = 0;
+        let attemptCount = 1;
+        let userName = '';
 
         // Elementos DOM
         const userInput = document.getElementById("user-input");
@@ -144,16 +186,19 @@
         const completedMessage = document.getElementById("completed-message");
         const textToTypeElement = document.getElementById("text-to-type");
         const nextBtn = document.getElementById("next-btn");
+        const nameInput = document.getElementById("user-name");
+        const nameFeedback = document.getElementById("name-feedback");
 
         // Carregar palavras do JSON
         async function loadWords() {
+            loadUserName(); // Carrega o nome salvo
             try {
                 const response = await fetch('../dados/palavras.json');
                 if (!response.ok) {
                     throw new Error('Falha ao carregar palavras');
                 }
                 const data = await response.json();
-                words = data.palavras || data; // Aceita tanto {palavras: [...]} quanto [...]
+                words = data.palavras || data;
 
                 if (words.length === 0) {
                     throw new Error('Nenhuma palavra encontrada no arquivo');
@@ -167,7 +212,6 @@
                 console.error('Erro ao carregar palavras:', error);
                 textToTypeElement.textContent = "Erro ao carregar palavras. Usando lista padrão.";
 
-                // Lista padrão caso o JSON falhe
                 words = [
                     "teclado",
                     "computador",
@@ -185,6 +229,29 @@
                     userInput.disabled = false;
                     nextBtn.disabled = false;
                 }, 2000);
+            }
+        }
+
+        // Funções para gerenciar o nome do usuário
+        function saveUserName() {
+            userName = nameInput.value.trim();
+            
+            if (userName) {
+                localStorage.setItem('typingExerciseUserName', userName);
+                nameFeedback.textContent = `Nome salvo: ${userName}`;
+            } else {
+                nameFeedback.textContent = 'Por favor, digite um nome válido';
+                nameFeedback.style.color = 'red';
+            }
+        }
+
+        function loadUserName() {
+            const savedName = localStorage.getItem('typingExerciseUserName');
+            if (savedName) {
+                userName = savedName;
+                nameInput.value = userName;
+                nameFeedback.textContent = `Bem-vindo de volta, ${userName}!`;
+                nameFeedback.style.color = 'green';
             }
         }
 
@@ -250,6 +317,43 @@
                 `;
 
                 feedback.innerHTML += `<p class="correct">Correto! Pressione "Próxima Palavra" para continuar.</p>`;
+                
+                // Salvar no Google Sheets
+                saveToGoogleSheets({
+                    date: new Date().toISOString(),
+                    exercise: "Exercício de Teclado",
+                    userName: userName,
+                    attempt: attemptCount,
+                    word: currentWord,
+                    time: timeTaken.toFixed(2),
+                    wpm: wpm,
+                    accuracy: accuracy,
+                    errors: errorCount
+                });
+                
+                attemptCount++;
+            }
+        }
+
+        async function saveToGoogleSheets(data) {
+            try {
+                const scriptUrl = 'SUA_URL_DE_APPS_SCRIPT'; // Substitua pela sua URL
+                
+                const response = await fetch(scriptUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Falha ao salvar dados');
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.error('Erro ao salvar no Google Sheets:', error);
             }
         }
 
@@ -260,6 +364,7 @@
 
         function restartGame() {
             currentWordIndex = 0;
+            attemptCount = 1;
             showWord();
             userInput.disabled = false;
             nextBtn.disabled = false;

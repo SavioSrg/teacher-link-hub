@@ -1,32 +1,61 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="assets/css/style.css">
-    <title>Portal</title>
+    <title>Meu Linktree</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #222;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        .profile img {
+            width: 100px;
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+        .profile h1 {
+            font-size: 24px;
+            margin: 5px 0;
+        }
+        .links a {
+            display: block;
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-size: 18px;
+            transition: background 0.3s;
+        }
+        .links a:hover {
+            background: #45a049;
+        }
+    </style>
 </head>
 <body>
-    <header>
-        <h1>Portal de Exercícios de Informática</h1>
-        <p>Pratique e aprimore seus conhecimentos!</p>
-    </header>
-    <main>
-        <h2>Categorias</h2>
-    <!-- <div class="user-info">
-            <label>
-                Seu Nome:
-                <input type="text" id="user-name" placeholder="Digite seu nome">
-                <button onclick="saveUserName()">Salvar</button>
-            </label>
-            AQUI É ONDE APARECE A MENSAGEM DE BEM-VINDO
-            <p id="name-feedback" style="color: green; margin-top: 5px;"></p>
-        </div> -->
-        <ul>
-            <li><a href="exercicios/teclado.html">Teclado</a></li>
-            <li><a href="exercicios/mouse.html">Mouse</a></li>
-        </ul>
-    </main>
+    <div class="container">
+        <div class="profile">
+            <!-- <img src="https://via.placeholder.com/100" alt="Perfil"> -->
+            <h1>Aula de informática</h1>
+            <!-- <p>Descrição curta sobre você.</p> -->
+        </div>
+        <div class="links">
+            <a href="exercicios/mouse.html" target="_blank">Exercícios de Mouse</a>
+            <a href="exercicios/teclado.html" target="_blank">Exercícios de Teclado</a>
+            <a href="https://monkeytype.com/" target="_blank">Site externo 1</a>
+            <a href="https://play.typeracer.com/?universe=lang_pt" target="_blank">Site externo 2</a>
+            <a href="https://docs.google.com/document/d/1nVUTLyPxzrvq9oUyuNS1J61HiQIx-KeohyEtCJ9xtBo/edit?usp=sharing" target="_blank">Site externo com as palavras</a>
+        </div>
+    </div>
     <script src="assets/js/name.js"></script>
 </body>
 </html>
