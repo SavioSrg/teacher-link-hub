@@ -218,9 +218,26 @@
                     "digitação",
                     "aprendizado",
                     "programação",
+                    "mouse",
+                    "tela",
+                    "texto",
+                    "letra",
+                    "palavra",
+                    "escrita",
+                    "rapidez",
+                    "foco",
+                    "treino",
+                    "atenção",
                     "A prática leva à perfeição",
                     "Continue treinando suas habilidades",
-                    "Digitação rápida é uma habilidade valiosa"
+                    "Digitação rápida é uma habilidade valiosa",
+                    "Digite devagar e com precisão",
+                    "A prática diária melhora sua velocidade",
+                    "Use todos os dedos ao digitar",
+                    "Olhe para a tela, não para o teclado",
+                    "Erros fazem parte do aprendizado",
+                    "Mantenha uma postura confortável",
+                    "Cada treino te torna mais rápido"
                 ];
 
                 setTimeout(() => {
@@ -235,7 +252,7 @@
         // Funções para gerenciar o nome do usuário
         function saveUserName() {
             userName = nameInput.value.trim();
-            
+
             if (userName) {
                 localStorage.setItem('typingExerciseUserName', userName);
                 nameFeedback.textContent = `Nome salvo: ${userName}`;
@@ -317,7 +334,7 @@
                 `;
 
                 feedback.innerHTML += `<p class="correct">Correto! Pressione "Próxima Palavra" para continuar.</p>`;
-                
+
                 // Salvar no Google Sheets
                 saveToGoogleSheets({
                     date: new Date().toISOString(),
@@ -330,7 +347,7 @@
                     accuracy: accuracy,
                     errors: errorCount
                 });
-                
+
                 attemptCount++;
             }
         }
@@ -338,7 +355,7 @@
         async function saveToGoogleSheets(data) {
             try {
                 const scriptUrl = 'SUA_URL_DE_APPS_SCRIPT'; // Substitua pela sua URL
-                
+
                 const response = await fetch(scriptUrl, {
                     method: 'POST',
                     headers: {
