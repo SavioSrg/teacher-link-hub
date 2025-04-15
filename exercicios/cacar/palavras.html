@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Caça Palavras</title>
+  <link rel="stylesheet" href="style-p.css">
+  <style>
+    body {
+  font-family: Arial, sans-serif;
+  background: #f0f0f0;
+  padding: 20px;
+  text-align: center;
+}
+
+.container {
+  display: flex;
+  justify-content: center;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+#word-search {
+  display: grid;
+  grid-template-columns: repeat(10, 40px);
+  gap: 2px;
+}
+
+.cell {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #aaa;
+  background: white;
+  font-size: 20px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.cell.selected {
+  background: #ffeb3b;
+}
+
+#clues {
+  text-align: left;
+}
+
+#clues ul {
+  list-style: none;
+  padding: 0;
+}
+
+  </style>
+</head>
+<body>
+  <h1>Caça Palavras</h1>
+  <div class="container">
+    <div id="word-search"></div>
+    <div id="clues">
+      <h2>Dicas</h2>
+      <ul id="clue-list"></ul>
+    </div>
+  </div>
+  <button onclick="checkAnswers()">Verificar</button>
+  <script>
+    const words = [
+  { word: "HTML", clue: "Linguagem de marcação usada na web" },
+  { word: "CSS", clue: "Responsável pelo estilo da página" },
+  { word: "JAVASCRIPT", clue: "Linguagem de programação para web interativa" }
+];
+
+const gridSize = 10;
+const grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(""));
+
+function placeWords() {
+  words.forEach((entry, index) => {
+    const word = entry.word.toUpperCase();
+    const isVertical = index % 2 === 0;
+    let row, col;
+
+    if (isVertical) {
+      row = Math.floor(Math.random() * (gridSize - word.length));
+      col = Math.floor(Math.random() * gridSize);
+      for (let i = 0; i < word.length; i++) {
+        grid[row + i][col] = word[i];
+      }
+    } else {
+      row = Math.floor(Math.random() * gridSize);
+      col = Math.floor(Math.random() * (gridSize - word.length));
+      for (let i = 0; i < word.length; i++) {
+        grid[row][col + i] = word[i];
+      }
+    }
+  });
+}
+
+function fillEmptyCells() {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  for (let row = 0; row < gridSize; row++) {
+    for (let col = 0; col < gridSize; col++) {
+      if (grid[row][col] === "") {
+        grid[row][col] = alphabet[Math.floor(Math.random() * alphabet.length)];
+      }
+    }
+  }
+}
+
+function renderGrid() {
+  const board = document.getElementById("word-search");
+  board.innerHTML = "";
+  grid.flat().forEach((letter, index) => {
+    const div = document.createElement("div");
+    div.classList.add("cell");
+    div.textContent = letter;
+    div.dataset.index = index;
+    div.addEventListener("click", () => div.classList.toggle("selected"));
+    board.appendChild(div);
+  });
+}
+
+function showClues() {
+  const clueList = document.getElementById("clue-list");
+  clueList.innerHTML = "";
+  words.forEach((entry, i) => {
+    const li = document.createElement("li");
+    li.textContent = `${i + 1}. ${entry.clue}`;
+    clueList.appendChild(li);
+  });
+}
+
+function checkAnswers() {
+  alert("Esse caça-palavras é para diversão, clique nas letras para marcar.\nEm breve: verificação automática de respostas!");
+}
+
+placeWords();
+fillEmptyCells();
+renderGrid();
+showClues();
+
+  </script>
+</body>
+</html>
