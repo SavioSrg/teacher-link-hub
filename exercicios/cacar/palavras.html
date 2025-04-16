@@ -3,56 +3,191 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Caça Palavras</title>
-  <link rel="stylesheet" href="style-p.css">
+  <meta name="description" content="Jogo de Caça Palavras interativo com temas de desenvolvimento web">
+  <title>Caça Palavras - Tecnologia Web</title>
   <style>
+    :root {
+      --primary-color: #4285f4;
+      --secondary-color: #34a853;
+      --accent-color: #fbbc05;
+      --error-color: #ea4335;
+      --bg-color: #f5f5f5;
+      --cell-bg: #ffffff;
+      --text-color: #333333;
+      --border-color: #dddddd;
+    }
+
     body {
-  font-family: Arial, sans-serif;
-  background: #f0f0f0;
-  padding: 20px;
-  text-align: center;
-}
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      padding: 20px;
+      text-align: center;
+      line-height: 1.6;
+    }
 
-.container {
-  display: flex;
-  justify-content: center;
-  gap: 40px;
-  flex-wrap: wrap;
-}
+    h1 {
+      color: var(--primary-color);
+      margin-bottom: 30px;
+      font-size: 2.5rem;
+    }
 
-#word-search {
-  display: grid;
-  grid-template-columns: repeat(10, 40px);
-  gap: 2px;
-}
+    h2 {
+      color: var(--secondary-color);
+      border-bottom: 2px solid var(--secondary-color);
+      padding-bottom: 8px;
+      margin-top: 0;
+    }
 
-.cell {
-  width: 40px;
-  height: 40px;
-  border: 1px solid #aaa;
-  background: white;
-  font-size: 20px;
-  cursor: pointer;
-  user-select: none;
-}
+    .container {
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+      flex-wrap: wrap;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
 
-.cell.selected {
-  background: #ffeb3b;
-}
+    #word-search {
+      display: grid;
+      grid-template-columns: repeat(10, minmax(30px, 50px));
+      gap: 3px;
+      margin: 20px 0;
+      background: var(--border-color);
+      padding: 5px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
 
-#clues {
-  text-align: left;
-}
+    .cell {
+      width: 100%;
+      aspect-ratio: 1/1;
+      border: 1px solid var(--border-color);
+      background: var(--cell-bg);
+      font-size: 1.5rem;
+      cursor: pointer;
+      user-select: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      transition: all 0.2s ease;
+      border-radius: 4px;
+    }
 
-#clues ul {
-  list-style: none;
-  padding: 0;
-}
+    .cell:hover {
+      transform: scale(1.05);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
 
+    .cell.selected {
+      background: var(--accent-color);
+    }
+
+    .cell.found {
+      background: var(--secondary-color);
+      color: white;
+    }
+
+    #clues {
+      text-align: left;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      min-width: 300px;
+    }
+
+    #clues ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    #clues li {
+      padding: 8px 0;
+      border-bottom: 1px dashed var(--border-color);
+      display: flex;
+      align-items: center;
+    }
+
+    #clues li:last-child {
+      border-bottom: none;
+    }
+
+    #clues li.found {
+      text-decoration: line-through;
+      color: #888;
+    }
+
+    .clue-number {
+      display: inline-block;
+      width: 25px;
+      height: 25px;
+      background: var(--primary-color);
+      color: white;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 25px;
+      margin-right: 10px;
+      font-size: 0.9rem;
+    }
+
+    button {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background 0.3s;
+      font-weight: bold;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    button:hover {
+      background: #3367d6;
+    }
+
+    .stats {
+      margin-top: 20px;
+      font-size: 1.1rem;
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+    }
+
+    .stat-item {
+      background: white;
+      padding: 10px 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    @media (max-width: 768px) {
+      #word-search {
+        grid-template-columns: repeat(10, minmax(25px, 35px));
+      }
+      
+      .cell {
+        font-size: 1.2rem;
+      }
+      
+      .container {
+        gap: 20px;
+      }
+    }
   </style>
 </head>
 <body>
-  <h1>Caça Palavras</h1>
+  <h1>Caça Palavras - Tecnologia Web</h1>
+  
+  <div class="stats">
+    <div class="stat-item">Encontradas: <span id="found-count">0</span>/<span id="total-words">3</span></div>
+    <div class="stat-item">Tempo: <span id="timer">00:00</span></div>
+  </div>
+  
   <div class="container">
     <div id="word-search"></div>
     <div id="clues">
@@ -60,82 +195,322 @@
       <ul id="clue-list"></ul>
     </div>
   </div>
-  <button onclick="checkAnswers()">Verificar</button>
+  
+  <button onclick="checkAnswers()">Verificar Respostas</button>
+  <button onclick="resetGame()">Reiniciar Jogo</button>
+
   <script>
     const words = [
-  { word: "HTML", clue: "Linguagem de marcação usada na web" },
-  { word: "CSS", clue: "Responsável pelo estilo da página" },
-  { word: "JAVASCRIPT", clue: "Linguagem de programação para web interativa" }
-];
+      { word: "HTML", clue: "Linguagem de marcação usada na web" },
+      { word: "CSS", clue: "Responsável pelo estilo da página" },
+      { word: "JAVASCRIPT", clue: "Linguagem de programação para web interativa" },
+      { word: "REACT", clue: "Biblioteca JavaScript para interfaces de usuário" },
+      { word: "NODEJS", clue: "Ambiente de execução JavaScript no servidor" },
+      { word: "API", clue: "Interface de programação de aplicações" },
+      { word: "RESPONSIVO", clue: "Design que se adapta a diferentes telas" }
+    ];
 
-const gridSize = 10;
-const grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(""));
+    const gridSize = 15;
+    let grid = [];
+    let selectedCells = [];
+    let foundWords = [];
+    let startTime = null;
+    let timerInterval = null;
 
-function placeWords() {
-  words.forEach((entry, index) => {
-    const word = entry.word.toUpperCase();
-    const isVertical = index % 2 === 0;
-    let row, col;
+    function initializeGame() {
+      grid = Array(gridSize).fill(null).map(() => Array(gridSize).fill(""));
+      selectedCells = [];
+      foundWords = [];
+      
+      placeWords();
+      fillEmptyCells();
+      renderGrid();
+      showClues();
+      updateStats();
+      
+      // Iniciar temporizador
+      if (timerInterval) clearInterval(timerInterval);
+      startTime = new Date();
+      timerInterval = setInterval(updateTimer, 1000);
+    }
 
-    if (isVertical) {
-      row = Math.floor(Math.random() * (gridSize - word.length));
-      col = Math.floor(Math.random() * gridSize);
-      for (let i = 0; i < word.length; i++) {
-        grid[row + i][col] = word[i];
-      }
-    } else {
-      row = Math.floor(Math.random() * gridSize);
-      col = Math.floor(Math.random() * (gridSize - word.length));
-      for (let i = 0; i < word.length; i++) {
-        grid[row][col + i] = word[i];
+    function placeWords() {
+      const directions = [
+        { x: 1, y: 0 },   // Horizontal
+        { x: 0, y: 1 },   // Vertical
+        { x: 1, y: 1 },   // Diagonal para baixo-direita
+        { x: 1, y: -1 }   // Diagonal para cima-direita
+      ];
+
+      words.forEach((entry, index) => {
+        const word = entry.word.toUpperCase();
+        let placed = false;
+        let attempts = 0;
+        const maxAttempts = 50;
+
+        while (!placed && attempts < maxAttempts) {
+          attempts++;
+          const direction = directions[Math.floor(Math.random() * directions.length)];
+          
+          let maxRow = gridSize;
+          let maxCol = gridSize;
+          
+          if (direction.y > 0) maxRow = gridSize - word.length;
+          if (direction.x > 0) maxCol = gridSize - word.length;
+          if (direction.y < 0) maxRow = word.length - 1;
+          
+          const row = direction.y > 0 
+            ? Math.floor(Math.random() * maxRow)
+            : direction.y < 0 
+              ? Math.floor(Math.random() * (gridSize - word.length)) + word.length
+              : Math.floor(Math.random() * gridSize);
+              
+          const col = Math.floor(Math.random() * maxCol);
+          
+          // Verificar se a palavra cabe sem sobrepor outras letras (exceto letras iguais)
+          let canPlace = true;
+          for (let i = 0; i < word.length; i++) {
+            const newRow = row + i * direction.y;
+            const newCol = col + i * direction.x;
+            const cell = grid[newRow][newCol];
+            
+            if (cell !== "" && cell !== word[i]) {
+              canPlace = false;
+              break;
+            }
+          }
+          
+          // Se puder colocar, coloca a palavra
+          if (canPlace) {
+            for (let i = 0; i < word.length; i++) {
+              const newRow = row + i * direction.y;
+              const newCol = col + i * direction.x;
+              grid[newRow][newCol] = word[i];
+            }
+            placed = true;
+            
+            // Armazenar informações da palavra colocada para verificação posterior
+            entry.startRow = row;
+            entry.startCol = col;
+            entry.direction = direction;
+          }
+        }
+      });
+    }
+
+    function fillEmptyCells() {
+      const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+      for (let row = 0; row < gridSize; row++) {
+        for (let col = 0; col < gridSize; col++) {
+          if (grid[row][col] === "") {
+            grid[row][col] = alphabet[Math.floor(Math.random() * alphabet.length)];
+          }
+        }
       }
     }
-  });
-}
 
-function fillEmptyCells() {
-  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  for (let row = 0; row < gridSize; row++) {
-    for (let col = 0; col < gridSize; col++) {
-      if (grid[row][col] === "") {
-        grid[row][col] = alphabet[Math.floor(Math.random() * alphabet.length)];
+    function renderGrid() {
+      const board = document.getElementById("word-search");
+      board.innerHTML = "";
+      
+      // Atualizar grid-template-columns para o novo tamanho
+      board.style.gridTemplateColumns = `repeat(${gridSize}, minmax(30px, 50px))`;
+      
+      for (let row = 0; row < gridSize; row++) {
+        for (let col = 0; col < gridSize; col++) {
+          const index = row * gridSize + col;
+          const div = document.createElement("div");
+          div.classList.add("cell");
+          div.textContent = grid[row][col];
+          div.dataset.row = row;
+          div.dataset.col = col;
+          
+          div.addEventListener("click", () => {
+            div.classList.toggle("selected");
+            const cellPos = { row: parseInt(div.dataset.row), col: parseInt(div.dataset.col) };
+            
+            if (div.classList.contains("selected")) {
+              selectedCells.push(cellPos);
+            } else {
+              selectedCells = selectedCells.filter(
+                cell => !(cell.row === cellPos.row && cell.col === cellPos.col)
+              );
+            }
+            
+            // Verificar se há uma palavra selecionada
+            checkForWord();
+          });
+          
+          board.appendChild(div);
+        }
       }
     }
-  }
-}
 
-function renderGrid() {
-  const board = document.getElementById("word-search");
-  board.innerHTML = "";
-  grid.flat().forEach((letter, index) => {
-    const div = document.createElement("div");
-    div.classList.add("cell");
-    div.textContent = letter;
-    div.dataset.index = index;
-    div.addEventListener("click", () => div.classList.toggle("selected"));
-    board.appendChild(div);
-  });
-}
+    function showClues() {
+      const clueList = document.getElementById("clue-list");
+      clueList.innerHTML = "";
+      document.getElementById("total-words").textContent = words.length;
+      
+      words.forEach((entry, i) => {
+        const li = document.createElement("li");
+        li.dataset.word = entry.word;
+        
+        const spanNumber = document.createElement("span");
+        spanNumber.classList.add("clue-number");
+        spanNumber.textContent = i + 1;
+        
+        const spanClue = document.createElement("span");
+        spanClue.textContent = entry.clue;
+        
+        li.appendChild(spanNumber);
+        li.appendChild(spanClue);
+        clueList.appendChild(li);
+      });
+    }
 
-function showClues() {
-  const clueList = document.getElementById("clue-list");
-  clueList.innerHTML = "";
-  words.forEach((entry, i) => {
-    const li = document.createElement("li");
-    li.textContent = `${i + 1}. ${entry.clue}`;
-    clueList.appendChild(li);
-  });
-}
+    function checkForWord() {
+      if (selectedCells.length < 3) return; // Mínimo de 3 letras para formar uma palavra
+      
+      // Ordenar células selecionadas
+      selectedCells.sort((a, b) => {
+        if (a.row !== b.row) return a.row - b.row;
+        return a.col - b.col;
+      });
+      
+      // Verificar direção (horizontal, vertical ou diagonal)
+      const first = selectedCells[0];
+      const last = selectedCells[selectedCells.length - 1];
+      
+      let direction;
+      if (first.row === last.row) {
+        direction = "horizontal";
+      } else if (first.col === last.col) {
+        direction = "vertical";
+      } else {
+        const rowDiff = last.row - first.row;
+        const colDiff = last.col - first.col;
+        if (Math.abs(rowDiff) === Math.abs(colDiff)) {
+          direction = rowDiff === colDiff ? "diagonal-down" : "diagonal-up";
+        } else {
+          return; // Não é uma linha reta
+        }
+      }
+      
+      // Verificar se as células estão em sequência
+      let isValid = true;
+      for (let i = 1; i < selectedCells.length; i++) {
+        const prev = selectedCells[i - 1];
+        const curr = selectedCells[i];
+        
+        switch (direction) {
+          case "horizontal":
+            if (curr.row !== prev.row || curr.col !== prev.col + 1) isValid = false;
+            break;
+          case "vertical":
+            if (curr.col !== prev.col || curr.row !== prev.row + 1) isValid = false;
+            break;
+          case "diagonal-down":
+            if (curr.row !== prev.row + 1 || curr.col !== prev.col + 1) isValid = false;
+            break;
+          case "diagonal-up":
+            if (curr.row !== prev.row + 1 || curr.col !== prev.col - 1) isValid = false;
+            break;
+        }
+        
+        if (!isValid) break;
+      }
+      
+      if (!isValid) return;
+      
+      // Construir a palavra a partir das células selecionadas
+      let word = "";
+      selectedCells.forEach(cell => {
+        word += grid[cell.row][cell.col];
+      });
+      
+      // Verificar se a palavra está na lista
+      const foundWord = words.find(
+        entry => entry.word.toUpperCase() === word || 
+                entry.word.toUpperCase() === word.split("").reverse().join("")
+      );
+      
+      if (foundWord && !foundWords.includes(foundWord.word)) {
+        // Marcar palavra como encontrada
+        foundWords.push(foundWord.word);
+        
+        // Marcar células como encontradas
+        const cells = document.querySelectorAll(".cell");
+        selectedCells.forEach(cell => {
+          const index = cell.row * gridSize + cell.col;
+          cells[index].classList.remove("selected");
+          cells[index].classList.add("found");
+        });
+        
+        // Marcar dica como encontrada
+        const clueItems = document.querySelectorAll("#clue-list li");
+        clueItems.forEach(item => {
+          if (item.dataset.word === foundWord.word) {
+            item.classList.add("found");
+          }
+        });
+        
+        selectedCells = [];
+        updateStats();
+        
+        // Verificar se todas as palavras foram encontradas
+        if (foundWords.length === words.length) {
+          clearInterval(timerInterval);
+          setTimeout(() => {
+            const endTime = new Date();
+            const timeDiff = (endTime - startTime) / 1000;
+            const minutes = Math.floor(timeDiff / 60);
+            const seconds = Math.floor(timeDiff % 60);
+            alert(`Parabéns! Você encontrou todas as palavras em ${minutes}m ${seconds}s!`);
+          }, 500);
+        }
+      }
+    }
 
-function checkAnswers() {
-  alert("Esse caça-palavras é para diversão, clique nas letras para marcar.\nEm breve: verificação automática de respostas!");
-}
+    function checkAnswers() {
+      const remainingWords = words.filter(word => !foundWords.includes(word.word));
+      
+      if (remainingWords.length === 0) {
+        alert("Parabéns! Você já encontrou todas as palavras!");
+        return;
+      }
+      
+      let message = remainingWords.length === words.length 
+        ? "Você ainda não encontrou nenhuma palavra.\n"
+        : `Você encontrou ${foundWords.length} de ${words.length} palavras.\n\n`;
+      
+      message += "Palavras restantes:\n";
+      remainingWords.forEach((word, i) => {
+        message += `${i + 1}. ${word.word} - ${word.clue}\n`;
+      });
+      
+      alert(message);
+    }
 
-placeWords();
-fillEmptyCells();
-renderGrid();
-showClues();
+    function resetGame() {
+      if (confirm("Tem certeza que deseja reiniciar o jogo? Seu progresso será perdido.")) {
+        initializeGame();
+      }
+    }
 
+    function updateStats() {
+      document.getElementById("found-count").textContent = foundWords.length;
+    }
+
+    function updateTimer() {
+      const currentTime = new Date();
+      const timeDiff = Math.floor((currentTime - startTime) / 1000);
+      const minutes = Math.floor(timeDiff / 60).toString().padStart(2, '0');
+      const seconds = (timeDiff % 60).toString().padStart(2, '0');
+      document.getElementById("timer").textContent = `${minutes}:${seconds}`;
+    }
+
+    // Inicializar o jogo quando a página carregar
+    window.addEventListener("DOMContentLoaded", initializeGame);
   </script>
 </body>
 </html>
