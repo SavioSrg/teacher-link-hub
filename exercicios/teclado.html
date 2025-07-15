@@ -195,6 +195,23 @@
     pointer-events: none;
     transition: all 0.1s;
   }
+  /* EXPORT BUTTON */
+  #export-btn {
+    background: #10b981;
+    color: #fff;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    font-size: calc(0.9rem * var(--font-factor, 1));
+    transition: background .2s, transform .1s;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+  #export-btn:hover { background: #059669; }
+  #export-btn:active { transform: scale(0.98); }
   @media(max-width:480px){
     h1{font-size:calc(1.5rem * var(--font-factor, 1))}
     #word-display{font-size:calc(1.5rem * var(--font-factor, 1))}
@@ -271,6 +288,14 @@
     </div>
     <h3>Ranking Local</h3>
     <ol id="ranking-list"></ol>
+    <button id="export-btn" class="primary">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+        <polyline points="7 10 12 15 17 10"></polyline>
+        <line x1="12" y1="15" x2="12" y2="3"></line>
+      </svg>
+      Exportar CSV
+    </button>
   </div>
 
   <!-- FOOTER BUTTONS (shown after game) -->
@@ -402,6 +427,7 @@ const finalTimeEl = document.getElementById('final-time');
 const increaseFontBtn = document.getElementById('increase-font');
 const decreaseFontBtn = document.getElementById('decrease-font');
 const cursorHighlight = document.getElementById('cursor-highlight');
+const exportBtn = document.getElementById('export-btn');
 
 // GAME VARIABLES
 let currentCategory = 'Tecnologia';
@@ -490,6 +516,38 @@ function loadRanking() {
     `;
     rankingList.appendChild(li);
   });
+}
+
+// Função para exportar ranking para CSV
+function exportToCSV() {
+  const rank = JSON.parse(localStorage.getItem('typingRank') || '[]');
+  if (rank.length === 0) {
+    showToast('Nenhum dado para exportar', false);
+    return;
+  }
+
+  // Cabeçalhos do CSV
+  let csv = 'Posição,Pontos,Modo,Categoria,Precisão,PPM,Data\n';
+  
+  // Adicionar cada linha do ranking
+  rank.forEach((r, i) => {
+    const date = new Date(r.date);
+    const formattedDate = `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+    csv += `${i + 1},${r.score},${r.mode},${r.category},${r.accuracy}%,${r.wpm},${formattedDate}\n`;
+  });
+
+  // Criar blob e link para download
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.setAttribute('href', url);
+  link.setAttribute('download', `ranking-digitação_${new Date().toISOString().slice(0,10)}.csv`);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  showToast('CSV exportado com sucesso!', true);
 }
 
 // Função para atualizar o tamanho da fonte
@@ -778,6 +836,9 @@ decreaseFontBtn.addEventListener('click', () => {
   fontSize = Math.max(fontSize - 0.1, 0.8); // Limite mínimo de 80%
   updateFontSize();
 });
+
+// Botão de exportação
+exportBtn.addEventListener('click', exportToCSV);
 
 // Atualizar destaque do cursor quando o input recebe foco
 wordInput.addEventListener('focus', updateCursorHighlight);
