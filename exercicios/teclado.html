@@ -1,411 +1,815 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Exercício de Digitação</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 50px;
-            background-color: #f4f4f4;
-        }
-
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            max-width: 600px;
-            margin: auto;
-        }
-
-        /* .text-box {
-            width: auto;
-            font-size: 24px;
-            background-color: #f3f3f3;
-            padding: 20px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            font-weight: bold;
-            color: #333;
-        } */
-
-        .text-box {
-            width: 100%;
-            height: 200px;
-            font-size: 24px;
-            background-color: #f3f3f3;
-            padding: 20px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            font-weight: bold;
-            color: #333;
-            overflow-y: auto;
-            white-space: pre-line;
-        }
-
-        .input-box {
-            width: 80%;
-            padding: 15px;
-            font-size: 18px;
-            margin-top: 10px;
-            border: 2px solid #007BFF;
-            border-radius: 5px;
-            outline: none;
-            resize: none;
-        }
-
-        .input-box:focus {
-            border-color: #0056b3;
-        }
-
-        .feedback {
-            margin-top: 15px;
-            font-size: 18px;
-            text-align: left;
-            min-height: 27px;
-        }
-
-        .error {
-            color: red;
-            text-decoration: underline;
-        }
-
-        .correct {
-            color: green;
-        }
-
-        .stats {
-            margin-top: 20px;
-            padding: 15px;
-            background-color: #e9f5ff;
-            border-radius: 5px;
-        }
-
-        button {
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            font-size: 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 15px;
-        }
-
-        button:hover {
-            background-color: #0056b3;
-        }
-
-        .controls {
-            margin: 20px 0;
-        }
-
-        .completed {
-            color: #007BFF;
-            font-size: 24px;
-            font-weight: bold;
-            margin-top: 20px;
-        }
-
-        .loading {
-            color: #666;
-            font-style: italic;
-        }
-
-        .user-info {
-            margin-bottom: 20px;
-            padding: 15px;
-            background-color: #e9f5ff;
-            border-radius: 5px;
-            text-align: left;
-        }
-
-        .user-info label {
-            font-weight: bold;
-        }
-
-        .user-info input {
-            padding: 8px;
-            margin: 0 10px;
-            border: 1px solid #007BFF;
-            border-radius: 4px;
-        }
-
-        .user-info button {
-            padding: 8px 15px;
-            margin: 0;
-            font-size: 14px;
-        }
-
-        #name-feedback {
-            color: green;
-            margin-top: 5px;
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teste de Digitação</title>
+<style>
+  :root {
+    --primary:#3b82f6;
+    --success:#16a34a;
+    --error:#dc2626;
+    --bg:#f9fafb;
+    --card:#ffffff;
+    --text-secondary: #6b7280;
+    --font-size: 1rem; /* Variável para controle de tamanho de fonte */
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,Cantarell,sans-serif;
+    background:var(--bg);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:2rem;
+    color:#111827;
+    line-height:1.5;
+    font-size: var(--font-size);
+  }
+  #app{
+    width:100%;
+    max-width:600px;
+    background:var(--card);
+    border-radius:1rem;
+    box-shadow:0 10px 25px rgba(0,0,0,.05);
+    padding:2rem;
+    display:flex;
+    flex-direction:column;
+    gap:1.5rem;
+  }
+  h1{font-size:calc(1.75rem * var(--font-factor, 1));text-align:center;}
+  h2{font-size:calc(1.25rem * var(--font-factor, 1)); margin-bottom:0.5rem;}
+  /* CONTROLS */
+  #controls{display:flex;flex-direction:column;gap:1rem}
+  #controls label{font-size:calc(.9rem * var(--font-factor, 1));font-weight:500;display:flex;align-items:center;gap:.5rem}
+  select, button, input[type="checkbox"]{cursor:pointer}
+  select {
+    padding: 0.5rem;
+    border-radius: 0.5rem;
+    border: 1px solid #d1d5db;
+    font-size: calc(.9rem * var(--font-factor, 1));
+  }
+  button.primary{
+    background:var(--primary);
+    color:#fff;
+    border:none;
+    padding:.75rem 1rem;
+    border-radius:.5rem;
+    font-size:calc(1rem * var(--font-factor, 1));
+    transition:background .2s, transform .1s;
+    font-weight: 500;
+  }
+  button.primary:hover{background:#2563eb}
+  button.primary:active{transform:scale(0.98)}
+  /* GAME AREA */
+  #game-area{display:none;flex-direction:column;align-items:center;gap:1.5rem}
+  #word-display{
+    min-height:3rem;
+    font-size:calc(2rem * var(--font-factor, 1));
+    text-align:center;
+    letter-spacing:1px;
+    line-height:1.3;
+    width: 100%;
+  }
+  #text-display {
+    font-size: calc(1.25rem * var(--font-factor, 1));
+    text-align: left;
+    padding: 1rem;
+    background: #f3f4f6;
+    border-radius: 0.5rem;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    line-height: 1.6;
+  }
+  #word-input{
+    width:100%;
+    font-size:calc(1.25rem * var(--font-factor, 1));
+    padding:.75rem 1rem;
+    border:2px solid var(--primary);
+    border-radius:.5rem;
+    transition: border-color 0.2s;
+  }
+  #stats{
+    display:flex;
+    flex-wrap:wrap;
+    gap:.75rem;
+    font-size:calc(.95rem * var(--font-factor, 1));
+    justify-content:center;
+    color: var(--text-secondary);
+  }
+  #stats span{font-weight:600; color: #111827;}
+  /* TOAST FEEDBACK */
+  #toast{
+    position:fixed;
+    top:1.25rem;left:50%;transform:translateX(-50%);
+    padding:.75rem 1.25rem;
+    border-radius:.5rem;
+    color:#fff;
+    font-weight:600;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .2s,transform .2s;
+    z-index:50;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    font-size: calc(1rem * var(--font-factor, 1));
+  }
+  #toast.show{opacity:1;transform:translate(-50%,0)}
+  /* RANKING */
+  #ranking{display:none}
+  #ranking h3{margin-bottom:.5rem;text-align:center; font-size: calc(1.1rem * var(--font-factor, 1));}
+  #ranking ol{list-style-position:inside; font-size: calc(1rem * var(--font-factor, 1));}
+  .ranking-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e5e7eb;
+  }
+  /* FOOTER BUTTON */
+  #footer-btns{display:none;flex-direction:column;gap:1rem}
+  button.secondary{
+    background:#e5e7eb;
+    border:none;
+    border-radius:.5rem;
+    padding:.75rem 1rem;
+    font-size:calc(1rem * var(--font-factor, 1));
+    font-weight: 500;
+    transition: background .2s, transform .1s;
+  }
+  button.secondary:hover{background:#d1d5db}
+  button.secondary:active{transform:scale(0.98)}
+  /* PROGRESS BAR */
+  #progress-container {
+    width: 100%;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: -0.5rem;
+  }
+  #progress-bar {
+    height: 100%;
+    background: var(--primary);
+    width: 0%;
+    transition: width 0.3s;
+  }
+  /* SETTINGS */
+  .settings-group {
+    background: #f3f4f6;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .settings-group h3 {
+    margin-bottom: 0.75rem;
+    font-size: calc(1rem * var(--font-factor, 1));
+    color: var(--text-secondary);
+  }
+  /* FONT SIZE CONTROLS */
+  #font-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: flex-end;
+    margin-bottom: -0.5rem;
+  }
+  #font-controls button {
+    background: #e5e7eb;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  /* CURSOR HIGHLIGHT */
+  .cursor-highlight {
+    position: absolute;
+    background-color: rgba(59, 130, 246, 0.3);
+    border-radius: 2px;
+    z-index: 10;
+    pointer-events: none;
+    transition: all 0.1s;
+  }
+  @media(max-width:480px){
+    h1{font-size:calc(1.5rem * var(--font-factor, 1))}
+    #word-display{font-size:calc(1.5rem * var(--font-factor, 1))}
+    #text-display {font-size: calc(1rem * var(--font-factor, 1));}
+    #app {padding: 1.5rem;}
+  }
+</style>
 </head>
-
 <body>
-    <div class="container">
-        <!-- Seção do Nome do Usuário -->
-        <div class="user-info">
-            <label>
-                Seu Nome:
-                <input type="text" id="user-name" placeholder="Digite seu nome">
-                <button onclick="saveUserName()">Salvar</button>
-            </label>
-            <p id="name-feedback"></p>
-        </div>
+<div id="app">
+  <div id="font-controls">
+    <button id="decrease-font" title="Diminuir fonte">A-</button>
+    <button id="increase-font" title="Aumentar fonte">A+</button>
+  </div>
+  
+  <h1>Teste de Digitação</h1>
 
-        <h1>Exercício de Digitação</h1>
-
-        <div class="text-box" id="text-to-type">Carregando palavras...</div>
-        <textarea id="user-input" class="input-box" rows="3" placeholder="Aguarde enquanto carregamos as palavras..."
-            disabled></textarea>
-
-        <div class="feedback" id="feedback"></div>
-
-        <div class="controls">
-            <label>
-                <input type="checkbox" id="allow-errors" checked>
-                Permitir continuar com erros
-            </label>
-            <button id="next-btn" onclick="nextWord()" disabled>Próxima Palavra</button>
-            <button onclick="restartGame()">Reiniciar</button>
-        </div>
-
-        <div class="stats" id="stats"></div>
-        <div id="completed-message" class="completed"></div>
+  <!-- CONTROLS -->
+  <div id="controls">
+    <div class="settings-group">
+      <h3>Configurações do Jogo</h3>
+      <label>
+        Modo:
+        <select id="mode-select">
+          <option value="words">Palavras</option>
+          <option value="sentences">Frases</option>
+          <option value="texts">Textos</option>
+        </select>
+      </label>
+      <label>
+        Categoria:
+        <select id="category-select">
+          <option value="Tecnologia">Tecnologia</option>
+          <option value="Animais">Animais</option>
+          <option value="Verbos">Verbos</option>
+          <option value="Literatura">Literatura</option>
+          <option value="Cotidiano">Cotidiano</option>
+        </select>
+      </label>
     </div>
+    
+    <div class="settings-group">
+      <h3>Opções Avançadas</h3>
+      <label><input type="checkbox" id="blind-mode"> Modo Cego (1 s)</label>
+      <label><input type="checkbox" id="timed-mode"> Desafio de Tempo (60 s)</label>
+      <label><input type="checkbox" id="hard-mode"> Modo Difícil (erros resetam)</label>
+    </div>
+    
+    <button id="start-btn" class="primary">Iniciar Jogo</button>
+  </div>
 
-    <a href="../dados/palavras.json"></a>
+  <!-- GAME AREA -->
+  <div id="game-area">
+    <div id="progress-container"><div id="progress-bar"></div></div>
+    <div id="word-display"></div>
+    <div id="text-display" style="display:none"></div>
+    <input type="text" id="word-input" placeholder="Digite aqui..." autocomplete="off" />
+    <div id="stats">
+      Nível: <span id="level">1</span>
+      | Pontos: <span id="points">0</span>
+      | Precisão: <span id="accuracy">100</span>%
+      | Tempo: <span id="timer">0</span>s
+      <span id="words-stats" style="display:none">| Palavras: <span id="correct">0</span></span>
+    </div>
+  </div>
 
-    <script>
-        // Variáveis globais
-        let words = [];
-        let currentWordIndex = 0;
-        let startTime;
-        let correctKeystrokes = 0;
-        let errorCount = 0;
-        let attemptCount = 1;
-        let userName = '';
+  <!-- RANKING -->
+  <div id="ranking">
+    <h3>Seu Desempenho</h3>
+    <div id="results">
+      <p>Palavras por minuto: <span id="wpm">0</span></p>
+      <p>Precisão: <span id="final-accuracy">0</span>%</p>
+      <p>Tempo: <span id="final-time">0</span>s</p>
+    </div>
+    <h3>Ranking Local</h3>
+    <ol id="ranking-list"></ol>
+  </div>
 
-        // Elementos DOM
-        const userInput = document.getElementById("user-input");
-        const feedback = document.getElementById("feedback");
-        const stats = document.getElementById("stats");
-        const allowErrors = document.getElementById("allow-errors");
-        const completedMessage = document.getElementById("completed-message");
-        const textToTypeElement = document.getElementById("text-to-type");
-        const nextBtn = document.getElementById("next-btn");
-        const nameInput = document.getElementById("user-name");
-        const nameFeedback = document.getElementById("name-feedback");
+  <!-- FOOTER BUTTONS (shown after game) -->
+  <div id="footer-btns">
+    <button id="restart-btn" class="primary">Jogar Novamente</button>
+    <button id="back-btn" class="secondary">Voltar ao Menu</button>
+  </div>
+</div>
 
-        // Carregar palavras do JSON
-        async function loadWords() {
-            loadUserName(); // Carrega o nome salvo
-            try {
-                const response = await fetch('../dados/palavras.json');
-                if (!response.ok) {
-                    throw new Error('Falha ao carregar palavras');
-                }
-                const data = await response.json();
-                words = data.palavras || data;
+<!-- FEEDBACK TOAST -->
+<div id="toast"></div>
 
-                if (words.length === 0) {
-                    throw new Error('Nenhuma palavra encontrada no arquivo');
-                }
+<!-- CURSOR HIGHLIGHT -->
+<div id="cursor-highlight" class="cursor-highlight" style="display: none;"></div>
 
-                showWord();
-                userInput.placeholder = "Comece a digitar...";
-                userInput.disabled = false;
-                nextBtn.disabled = false;
-            } catch (error) {
-                console.error('Erro ao carregar palavras:', error);
-                textToTypeElement.textContent = "Erro ao carregar palavras. Usando lista padrão.";
+<script>
+// WORD DATA
+const wordData = {
+  Tecnologia: {
+    easy: ["HTML", "CSS", "JS", "Java", "Código", "Python", "Rede", "Dados", "Site", "App"],
+    medium: ["computador", "programar", "algoritmo", "internet", "navegador", "servidor", "dispositivo", "framework"],
+    hard: ["criptografia", "desenvolvedor", "descompilador", "metodologia", "inteligência artificial", "machine learning"]
+  },
+  Animais: {
+    easy: ["gato", "cachorro", "leão", "pato", "peixe", "vaca", "urso", "pássaro"],
+    medium: ["dromedário", "ornitorrinco", "hipopótamo", "girafa", "tartaruga", "elefante", "rinoceronte"],
+    hard: ["guepardo", "crocodilo", "camaleão", "bicho-preguiça", "tubarão-baleia"]
+  },
+  Verbos: {
+    easy: ["comer", "falar", "rir", "amar", "correr", "pular", "ler", "ver", "ouvir"],
+    medium: ["programar", "interpretar", "digerir", "competir", "desenvolver", "construir", "aprender"],
+    hard: ["estratificar", "concatenar", "divulgar", "investigar", "implementar", "desconstruir"]
+  },
+  Literatura: {
+    easy: ["livro", "poema", "verso", "prosa", "autor", "leitor", "página"],
+    medium: ["romance", "soneto", "metáfora", "narrativa", "personagem", "enredo"],
+    hard: ["intertextualidade", "onomatopeia", "prosopopeia", "paralelismo", "neologismo"]
+  },
+  Cotidiano: {
+    easy: ["casa", "rua", "tempo", "amigo", "família", "comida", "água"],
+    medium: ["conversa", "trabalho", "viagem", "mercado", "hospital", "escola"],
+    hard: ["responsabilidade", "organização", "comunicação", "planejamento"]
+  }
+};
 
-                words = [
-                    "teclado",
-                    "computador",
-                    "digitação",
-                    "aprendizado",
-                    "programação",
-                    "mouse",
-                    "tela",
-                    "texto",
-                    "letra",
-                    "palavra",
-                    "escrita",
-                    "rapidez",
-                    "foco",
-                    "treino",
-                    "atenção",
-                    "A prática leva à perfeição",
-                    "Continue treinando suas habilidades",
-                    "Digitação rápida é uma habilidade valiosa",
-                    "Digite devagar e com precisão",
-                    "A prática diária melhora sua velocidade",
-                    "Use todos os dedos ao digitar",
-                    "Olhe para a tela, não para o teclado",
-                    "Erros fazem parte do aprendizado",
-                    "Mantenha uma postura confortável",
-                    "Cada treino te torna mais rápido",
-                    "De tudo, ao meu amor serei atento\nAntes, e com tal zelo, e sempre, e tanto\nQue mesmo em face do maior encanto\nDele se encante mais meu pensamento.\nQuero vivê-lo em cada vão momento\nE em louvor hei de espalhar meu canto\nE rir meu riso e derramar meu pranto\nAo seu pesar ou seu contentamento.\nE assim, quando mais tarde me procure\nQuem sabe a morte, angústia de quem vive\nQuem sabe a solidão, fim de quem ama\nEu possa me dizer do amor (que tive):\nQue não seja imortal, posto que é chama\nMas que seja infinito enquanto dure."
-                ];
+// SENTENCES DATA
+const sentenceData = {
+  Tecnologia: [
+    "A tecnologia avança rapidamente.",
+    "Programar é resolver problemas.",
+    "O futuro é digital.",
+    "A internet conecta o mundo.",
+    "Dados são o novo petróleo."
+  ],
+  Animais: [
+    "O leão é o rei da selva.",
+    "Cachorros são os melhores amigos do homem.",
+    "A girafa tem um pescoço muito longo.",
+    "Os pássaros voam no céu azul.",
+    "O peixe nada no aquário."
+  ],
+  Verbos: [
+    "Eu gosto de ler livros interessantes.",
+    "Ela corre no parque todas as manhãs.",
+    "Nós programamos aplicativos úteis.",
+    "Você fala muito rápido.",
+    "Eles aprendem coisas novas todo dia."
+  ],
+  Literatura: [
+    "O livro estava na mesa de cabeceira.",
+    "A poesia toca a alma das pessoas.",
+    "O autor escreveu um novo romance.",
+    "A metáfora enriquece o texto.",
+    "A narrativa tinha um enredo complexo."
+  ],
+  Cotidiano: [
+    "Hoje o dia está muito bonito.",
+    "Vamos ao mercado comprar frutas.",
+    "A família se reuniu no domingo.",
+    "Preciso organizar minha rotina.",
+    "A comunicação é essencial nas relações."
+  ]
+};
 
-                setTimeout(() => {
-                    showWord();
-                    userInput.placeholder = "Comece a digitar...";
-                    userInput.disabled = false;
-                    nextBtn.disabled = false;
-                }, 2000);
-            }
-        }
+// TEXTS DATA
+const textData = {
+  Tecnologia: [
+    "A inteligência artificial está transformando diversos setores da economia. Desde assistentes virtuais até carros autônomos, as aplicações são vastas e promissoras. No entanto, é importante considerar os aspectos éticos envolvidos nesse desenvolvimento tecnológico.",
+    "A programação de computadores é uma habilidade cada vez mais valiosa no mercado de trabalho. Dominar linguagens como Python, JavaScript e Java pode abrir portas para diversas oportunidades profissionais na área de tecnologia."
+  ],
+  Animais: [
+    "Os animais selvagens enfrentam diversos desafios devido à ação humana. O desmatamento, a poluição e as mudanças climáticas ameaçam seus habitats naturais. A preservação da biodiversidade é essencial para o equilíbrio dos ecossistemas.",
+    "Os animais de estimação trazem alegria e companheirismo para muitas famílias. Cuidar de um pet envolve responsabilidades como alimentação adequada, visitas ao veterinário e atenção aos seus comportamentos e necessidades."
+  ],
+  Literatura: [
+    "A literatura brasileira é rica e diversificada, contando com grandes nomes como Machado de Assis, Clarice Lispector e Guimarães Rosa. Suas obras retratam aspectos importantes da cultura e sociedade brasileira em diferentes períodos históricos.",
+    "Ler é uma atividade que estimula a imaginação, amplia o vocabulário e desenvolve o pensamento crítico. O hábito da leitura deve ser cultivado desde a infância, pois traz benefícios que perduram por toda a vida."
+  ]
+};
 
-        // Funções para gerenciar o nome do usuário
-        function saveUserName() {
-            userName = nameInput.value.trim();
+// ELEMENTS
+const controls = document.getElementById('controls');
+const startBtn = document.getElementById('start-btn');
+const blindChk = document.getElementById('blind-mode');
+const timedChk = document.getElementById('timed-mode');
+const hardChk = document.getElementById('hard-mode');
+const modeSel = document.getElementById('mode-select');
+const catSel = document.getElementById('category-select');
+const gameArea = document.getElementById('game-area');
+const wordDisplay = document.getElementById('word-display');
+const textDisplay = document.getElementById('text-display');
+const wordInput = document.getElementById('word-input');
+const levelEl = document.getElementById('level');
+const pointsEl = document.getElementById('points');
+const correctEl = document.getElementById('correct');
+const accuracyEl = document.getElementById('accuracy');
+const timerEl = document.getElementById('timer');
+const wordsStatsEl = document.getElementById('words-stats');
+const rankingDiv = document.getElementById('ranking');
+const rankingList = document.getElementById('ranking-list');
+const footerBtns = document.getElementById('footer-btns');
+const restartBtn = document.getElementById('restart-btn');
+const backBtn = document.getElementById('back-btn');
+const toast = document.getElementById('toast');
+const progressBar = document.getElementById('progress-bar');
+const wpmEl = document.getElementById('wpm');
+const finalAccuracyEl = document.getElementById('final-accuracy');
+const finalTimeEl = document.getElementById('final-time');
+const increaseFontBtn = document.getElementById('increase-font');
+const decreaseFontBtn = document.getElementById('decrease-font');
+const cursorHighlight = document.getElementById('cursor-highlight');
 
-            if (userName) {
-                localStorage.setItem('typingExerciseUserName', userName);
-                nameFeedback.textContent = `Nome salvo: ${userName}`;
-            } else {
-                nameFeedback.textContent = 'Por favor, digite um nome válido';
-                nameFeedback.style.color = 'red';
-            }
-        }
+// GAME VARIABLES
+let currentCategory = 'Tecnologia';
+let currentMode = 'words';
+let level = 1;
+let wordsTyped = 0;
+let correct = 0;
+let points = 0;
+let blind = false;
+let timed = false;
+let hard = false;
+let timerInterval = null;
+let timeLeft = 0;
+let startTime = 0;
+let currentText = '';
+let currentPosition = 0;
+let currentSentence = '';
+let currentWord = '';
+let fontSize = 1; // Fator de tamanho de fonte (1 = 100%)
 
-        function loadUserName() {
-            const savedName = localStorage.getItem('typingExerciseUserName');
-            if (savedName) {
-                userName = savedName;
-                nameInput.value = userName;
-                nameFeedback.textContent = `Bem-vindo de volta, ${userName}!`;
-                nameFeedback.style.color = 'green';
-            }
-        }
+// UTILITIES
+function getRandomWord() {
+  const diff = level === 1 ? 'easy' : level === 2 ? 'medium' : 'hard';
+  const arr = wordData[currentCategory][diff];
+  return arr[Math.floor(Math.random() * arr.length)];
+}
 
-        function showWord() {
-            if (currentWordIndex < words.length) {
-                textToTypeElement.textContent = words[currentWordIndex];
-                userInput.value = "";
-                feedback.textContent = "";
-                stats.textContent = "";
-                completedMessage.textContent = "";
-                startTime = null;
-                correctKeystrokes = 0;
-                errorCount = 0;
-                userInput.focus();
-            } else {
-                completedMessage.textContent = "Parabéns! Você concluiu todos os exercícios!";
-                userInput.disabled = true;
-                nextBtn.disabled = true;
-            }
-        }
+function getRandomSentence() {
+  const arr = sentenceData[currentCategory];
+  return arr[Math.floor(Math.random() * arr.length)];
+}
 
-        userInput.addEventListener("input", function (event) {
-            if (!startTime) startTime = new Date();
-            checkTyping();
-        });
+function getRandomText() {
+  const arr = textData[currentCategory];
+  return arr[Math.floor(Math.random() * arr.length)];
+}
 
-        function checkTyping() {
-            const typedText = userInput.value;
-            const currentWord = words[currentWordIndex];
-            let correct = "";
-            let incorrect = "";
-            let hasError = false;
-            correctKeystrokes = 0;
-            errorCount = 0;
+function showToast(msg, isSuccess = true) {
+  toast.textContent = msg;
+  toast.style.background = isSuccess ? 'var(--success)' : 'var(--error)';
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), isSuccess ? 800 : 1500);
+}
 
-            for (let i = 0; i < typedText.length; i++) {
-                if (typedText[i] === currentWord[i]) {
-                    correct += typedText[i];
-                    correctKeystrokes++;
-                } else {
-                    incorrect += `<span class='error'>${typedText[i]}</span>`;
-                    hasError = true;
-                    errorCount++;
-                    if (!allowErrors.checked) {
-                        userInput.value = typedText.slice(0, -1);
-                        return;
-                    }
-                }
-            }
+function updateRanking(score, mode) {
+  let rank = JSON.parse(localStorage.getItem('typingRank') || '[]');
+  rank.push({
+    score,
+    mode,
+    category: currentCategory,
+    date: new Date().toISOString(),
+    accuracy: Math.floor((correct / wordsTyped) * 100),
+    wpm: calculateWPM()
+  });
+  rank.sort((a, b) => b.score - a.score);
+  rank = rank.slice(0, 10);
+  localStorage.setItem('typingRank', JSON.stringify(rank));
+  rankingList.innerHTML = '';
+  rank.forEach((r, i) => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <div class="ranking-item">
+        <span>${i + 1}. ${r.score} ${r.mode === 'words' ? 'palavras' : r.mode === 'sentences' ? 'frases' : 'textos'} (${r.category})</span>
+        <span>${new Date(r.date).toLocaleDateString()}</span>
+      </div>
+    `;
+    rankingList.appendChild(li);
+  });
+}
 
-            feedback.innerHTML = correct + incorrect;
+function calculateWPM() {
+  const timeInMinutes = (Date.now() - startTime) / 60000;
+  return Math.round(correct / timeInMinutes);
+}
 
-            if (typedText === currentWord) {
-                const timeTaken = (new Date() - startTime) / 1000;
-                const wpm = Math.round((currentWord.length / 5) / (timeTaken / 60));
-                const accuracy = Math.round((correctKeystrokes / (correctKeystrokes + errorCount)) * 100);
+function loadRanking() {
+  const rank = JSON.parse(localStorage.getItem('typingRank') || '[]');
+  rankingList.innerHTML = '';
+  rank.forEach((r, i) => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <div class="ranking-item">
+        <span>${i + 1}. ${r.score} ${r.mode === 'words' ? 'palavras' : r.mode === 'sentences' ? 'frases' : 'textos'} (${r.category})</span>
+        <span>${new Date(r.date).toLocaleDateString()}</span>
+      </div>
+    `;
+    rankingList.appendChild(li);
+  });
+}
 
-                stats.innerHTML = `
-                    <p>Tempo: ${timeTaken.toFixed(2)} segundos</p>
-                    <p>Velocidade: ${wpm} PPM (palavras por minuto)</p>
-                    <p>Precisão: ${accuracy}%</p>
-                    <p>Erros: ${errorCount}</p>
-                `;
+// Função para atualizar o tamanho da fonte
+function updateFontSize() {
+  document.documentElement.style.setProperty('--font-factor', fontSize);
+  localStorage.setItem('typingTestFontSize', fontSize);
+}
 
-                feedback.innerHTML += `<p class="correct">Correto! Pressione "Próxima Palavra" para continuar.</p>`;
+// Função para posicionar o destaque do cursor
+function updateCursorHighlight() {
+  if (wordInput !== document.activeElement) {
+    cursorHighlight.style.display = 'none';
+    return;
+  }
+  
+  const rect = wordInput.getBoundingClientRect();
+  const scrollY = window.scrollY || window.pageYOffset;
+  
+  cursorHighlight.style.display = 'block';
+  cursorHighlight.style.width = `${rect.width}px`;
+  cursorHighlight.style.height = `${rect.height}px`;
+  cursorHighlight.style.left = `${rect.left}px`;
+  cursorHighlight.style.top = `${rect.top + scrollY}px`;
+}
 
-                // Salvar no Google Sheets
-                saveToGoogleSheets({
-                    date: new Date().toISOString(),
-                    exercise: "Exercício de Teclado",
-                    userName: userName,
-                    attempt: attemptCount,
-                    word: currentWord,
-                    time: timeTaken.toFixed(2),
-                    wpm: wpm,
-                    accuracy: accuracy,
-                    errors: errorCount
-                });
+// GAME LOGIC
+function startGame() {
+  // settings
+  currentCategory = catSel.value;
+  currentMode = modeSel.value;
+  blind = blindChk.checked;
+  timed = timedChk.checked;
+  hard = hardChk.checked;
+  
+  level = 1;
+  wordsTyped = 0;
+  correct = 0;
+  points = 0;
+  currentPosition = 0;
+  
+  // UI
+  controls.style.display = 'none';
+  rankingDiv.style.display = 'none';
+  footerBtns.style.display = 'none';
+  gameArea.style.display = 'flex';
+  
+  // Show/hide elements based on mode
+  wordDisplay.style.display = currentMode === 'texts' ? 'none' : 'block';
+  textDisplay.style.display = currentMode === 'texts' ? 'block' : 'none';
+  wordsStatsEl.style.display = currentMode === 'words' ? 'inline' : 'none';
+  
+  // Reset stats
+  levelEl.textContent = level;
+  pointsEl.textContent = points;
+  correctEl.textContent = correct;
+  accuracyEl.textContent = 100;
+  progressBar.style.width = '0%';
+  
+  wordInput.value = '';
+  wordInput.focus();
+  
+  // Atualizar destaque do cursor
+  updateCursorHighlight();
+  
+  // timer
+  if (timerInterval) clearInterval(timerInterval);
+  if (timed) {
+    timeLeft = 60;
+    timerEl.textContent = timeLeft;
+    timerInterval = setInterval(() => {
+      timeLeft--;
+      timerEl.textContent = timeLeft;
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        endGame();
+      }
+    }, 1000);
+  } else {
+    timerEl.textContent = '0';
+  }
+  
+  startTime = Date.now();
+  
+  if (currentMode === 'words') {
+    nextWord();
+  } else if (currentMode === 'sentences') {
+    nextSentence();
+  } else if (currentMode === 'texts') {
+    nextText();
+  }
+}
 
-                attemptCount++;
-            }
-        }
+function endGame() {
+  wordInput.disabled = true;
+  gameArea.style.display = 'none';
+  footerBtns.style.display = 'flex';
+  rankingDiv.style.display = 'block';
+  
+  // Calculate final stats
+  const finalAccuracy = Math.floor((correct / wordsTyped) * 100) || 0;
+  const finalTime = Math.floor((Date.now() - startTime) / 1000);
+  const wpm = calculateWPM();
+  
+  wpmEl.textContent = wpm;
+  finalAccuracyEl.textContent = finalAccuracy;
+  finalTimeEl.textContent = finalTime;
+  
+  showToast(`Fim de jogo! ${correct} ${currentMode === 'words' ? 'palavras' : currentMode === 'sentences' ? 'frases' : 'textos'} digitadas.`, true);
+  updateRanking(correct, currentMode);
+}
 
-        async function saveToGoogleSheets(data) {
-            try {
-                const scriptUrl = 'SUA_URL_DE_APPS_SCRIPT'; // Substitua pela sua URL
+function nextWord() {
+  wordsTyped++;
+  const word = getRandomWord();
+  wordDisplay.textContent = word;
+  wordDisplay.dataset.target = word;
+  wordInput.value = '';
+  wordInput.disabled = false;
+  wordInput.focus();
+  
+  if (blind) {
+    setTimeout(() => wordDisplay.textContent = '', 1000);
+  }
+}
 
-                const response = await fetch(scriptUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                });
+function nextSentence() {
+  wordsTyped++;
+  const sentence = getRandomSentence();
+  wordDisplay.textContent = sentence;
+  wordDisplay.dataset.target = sentence;
+  wordInput.value = '';
+  wordInput.disabled = false;
+  wordInput.focus();
+  
+  if (blind) {
+    setTimeout(() => wordDisplay.textContent = '', 1500);
+  }
+}
 
-                if (!response.ok) {
-                    throw new Error('Falha ao salvar dados');
-                }
+function nextText() {
+  if (!currentText || currentPosition >= currentText.length) {
+    currentText = getRandomText();
+    currentPosition = 0;
+  }
+  
+  // Display the full text with highlighting
+  const before = currentText.substring(0, currentPosition);
+  const current = currentText.substring(currentPosition, currentPosition + 1);
+  const after = currentText.substring(currentPosition + 1);
+  
+  textDisplay.innerHTML = `${before}<span style="background: var(--primary); color: white; border-radius: 2px;">${current}</span>${after}`;
+  textDisplay.scrollTop = textDisplay.scrollHeight;
+  
+  // Update progress
+  const progress = (currentPosition / currentText.length) * 100;
+  progressBar.style.width = `${progress}%`;
+  
+  wordInput.value = '';
+  wordInput.focus();
+}
 
-                return await response.json();
-            } catch (error) {
-                console.error('Erro ao salvar no Google Sheets:', error);
-            }
-        }
+function handleWordInput() {
+  const target = wordDisplay.dataset.target || '';
+  const typed = wordInput.value.trim();
+  
+  // Instant color feedback in input border
+  wordInput.style.borderColor = target.startsWith(typed) ? 'var(--primary)' : 'var(--error)';
+  
+  if (typed === target) {
+    correct++;
+    points += 10;
+    showToast('✔', true);
+    
+    // Update stats
+    correctEl.textContent = correct;
+    pointsEl.textContent = points;
+    accuracyEl.textContent = Math.floor((correct / wordsTyped) * 100);
+    
+    if (correct % 5 === 0) {
+      level = Math.min(level + 1, 3);
+      levelEl.textContent = level;
+    }
+    
+    nextWord();
+  } else if (hard && typed.length > 0 && !target.startsWith(typed)) {
+    wordInput.value = '';
+    showToast('Errou! Tente novamente.', false);
+  }
+}
 
-        function nextWord() {
-            currentWordIndex++;
-            showWord();
-        }
+function handleSentenceInput() {
+  const target = wordDisplay.dataset.target || '';
+  const typed = wordInput.value;
+  
+  // Instant color feedback in input border
+  wordInput.style.borderColor = target.startsWith(typed) ? 'var(--primary)' : 'var(--error)';
+  
+  if (typed === target) {
+    correct++;
+    points += 20;
+    showToast('✔ Frase completa!', true);
+    
+    // Update stats
+    correctEl.textContent = correct;
+    pointsEl.textContent = points;
+    accuracyEl.textContent = Math.floor((correct / wordsTyped) * 100);
+    
+    if (correct % 3 === 0) {
+      level = Math.min(level + 1, 3);
+      levelEl.textContent = level;
+    }
+    
+    nextSentence();
+  } else if (hard && typed.length > 0 && !target.startsWith(typed)) {
+    wordInput.value = '';
+    showToast('Errou! Tente novamente.', false);
+  }
+}
 
-        function restartGame() {
-            currentWordIndex = 0;
-            attemptCount = 1;
-            showWord();
-            userInput.disabled = false;
-            nextBtn.disabled = false;
-        }
+function handleTextInput() {
+  const targetChar = currentText[currentPosition];
+  const typedChar = wordInput.value;
+  
+  if (typedChar === targetChar) {
+    correct++;
+    currentPosition++;
+    
+    // Update stats
+    wordsTyped++;
+    correctEl.textContent = correct;
+    accuracyEl.textContent = Math.floor((correct / wordsTyped) * 100);
+    
+    if (currentPosition >= currentText.length) {
+      points += 50;
+      pointsEl.textContent = points;
+      showToast('✔ Texto completo!', true);
+      setTimeout(() => {
+        nextText();
+      }, 800);
+    } else {
+      nextText();
+    }
+  } else if (hard && typedChar.length > 0) {
+    wordInput.value = '';
+    showToast('Errou! Tente novamente.', false);
+  }
+}
 
-        // Iniciar o jogo carregando as palavras
-        loadWords();
-    </script>
+function handleInput() {
+  if (currentMode === 'words') {
+    handleWordInput();
+  } else if (currentMode === 'sentences') {
+    handleSentenceInput();
+  } else if (currentMode === 'texts') {
+    handleTextInput();
+  }
+  
+  // Update timer for non-timed mode
+  if (!timed) {
+    const seconds = Math.floor((Date.now() - startTime) / 1000);
+    timerEl.textContent = seconds;
+  }
+}
+
+// EVENTS
+startBtn.addEventListener('click', startGame);
+wordInput.addEventListener('input', handleInput);
+restartBtn.addEventListener('click', () => {
+  wordInput.disabled = false;
+  startGame();
+});
+backBtn.addEventListener('click', () => {
+  gameArea.style.display = 'none';
+  footerBtns.style.display = 'none';
+  controls.style.display = 'flex';
+  loadRanking();
+});
+
+// Controles de tamanho de fonte
+increaseFontBtn.addEventListener('click', () => {
+  fontSize = Math.min(fontSize + 0.1, 1.5); // Limite máximo de 150%
+  updateFontSize();
+});
+
+decreaseFontBtn.addEventListener('click', () => {
+  fontSize = Math.max(fontSize - 0.1, 0.8); // Limite mínimo de 80%
+  updateFontSize();
+});
+
+// Atualizar destaque do cursor quando o input recebe foco
+wordInput.addEventListener('focus', updateCursorHighlight);
+wordInput.addEventListener('blur', () => {
+  cursorHighlight.style.display = 'none';
+});
+
+// Acompanhar rolagem da página
+window.addEventListener('scroll', updateCursorHighlight);
+window.addEventListener('resize', updateCursorHighlight);
+
+// Initialize
+window.addEventListener('DOMContentLoaded', () => {
+  // Carregar tamanho de fonte salvo
+  const savedFontSize = parseFloat(localStorage.getItem('typingTestFontSize')) || 1;
+  fontSize = savedFontSize;
+  updateFontSize();
+  
+  loadRanking();
+  
+  // Set initial mode
+  modeSel.addEventListener('change', (e) => {
+    currentMode = e.target.value;
+  });
+  
+  // Prevent form submission on Enter
+  wordInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+    }
+  });
+});
+</script>
 </body>
-
 </html>
