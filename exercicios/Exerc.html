@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Arraste e insira — Contador de movimentos (refactor)</title>
+<style>
+  :root{
+    --primary:#4f46e5;
+    --card:#fff;
+    --bg:#fbfbff;
+    --muted:#6b7280;
+  }
+  html,body{height:100%}
+  body{font-family: "Georgia", serif; background:var(--bg); margin:0; min-height:100vh; display:flex;align-items:center;justify-content:center;padding:20px}
+  .stage{width:100%;max-width:820px;background:#fff;padding:18px;border-radius:10px;box-shadow:0 8px 30px rgba(16,24,40,.06)}
+  h2{margin:0 0 12px 0;font-weight:600}
+  .meta{display:flex;gap:12px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+  .panel{background:var(--card);padding:8px 12px;border-radius:8px;border:1px solid #eef2ff;font-size:14px}
+  /* container as a list for semantics */
+  #words{
+    display:flex;flex-wrap:wrap;gap:18px 36px;align-content:flex-start;padding:20px 8px;min-height:160px;line-height:1.6;position:relative;
+    font-size:28px;font-style:italic;color:#555;
+    margin:8px 0;
+  }
+  .word{
+    background:transparent;border:0;padding:6px 8px;border-radius:6px;cursor:grab;user-select:none;touch-action:none;transition:transform .12s ease, opacity .12s ease;
+    display:inline-block;
+    outline: none;
+  }
+  .word.dragging{opacity:.18; transform:scale(.98)}
+  .placeholder{width:2px;min-height:38px;background:var(--primary);opacity:.25;border-radius:2px;transform:translateY(6px)}
+  .controls{display:flex;gap:8px;margin-top:12px}
+  button{padding:8px 12px;border-radius:8px;border:0;background:var(--primary);color:#fff;cursor:pointer}
+  button.secondary{background:#eef2ff;color:var(--primary)}
+  .ghost{position:fixed;left:0;top:0;pointer-events:none;transform:translate(-9999px,-9999px);z-index:9999;font-size:28px;font-style:italic;color:#333;background:rgba(255,255,255,0.9);padding:6px 10px;border-radius:8px;box-shadow:0 8px 18px rgba(16,24,40,0.18)}
+  .word:focus{box-shadow:0 0 0 3px rgba(79,70,229,0.15); border-radius:6px}
+  #msg{margin-top:12px;font-weight:700;color:var(--muted)}
+  /* reduced motion respect */
+  @media (prefers-reduced-motion: reduce){
+    .word, .ghost{transition:none}
+  }
+  @media (max-width:520px){ #words{font-size:22px; gap:12px 18px} .ghost{font-size:22px} }
+</style>
+</head>
+<body>
+  <main class="stage" aria-labelledby="title">
+    <h2 id="title">Arraste para inserir entre palavras — Contador de movimentos</h2>
+
+    <div class="meta">
+      <div class="panel">Rodada: <strong id="roundNum">1</strong>/<span id="roundTotal">1</span></div>
+      <div class="panel">Movimentos (rodada): <strong id="roundMoves">0</strong></div>
+      <div class="panel">Movimentos (total): <strong id="totalMoves">0</strong></div>
+      <div style="margin-left:auto" class="panel">Pontuação: <strong id="score">0</strong></div>
+    </div>
+
+    <!-- role=list para melhorar a semântica com leitores de tela -->
+    <div id="words" role="list" aria-label="Palavras embaralhadas" aria-live="polite"></div>
+
+    <div class="controls">
+      <button id="prevBtn" class="secondary">◀ Anterior</button>
+      <button id="nextBtn" class="secondary">Próxima ▶</button>
+      <button id="checkBtn">Verificar</button>
+    </div>
+
+    <div id="msg" role="status" aria-live="polite"></div>
+  </main>
+
+<script>
+(() => {
+  /* --------- Configs / Frases --------- */
+  const phrases = [
+    "Assim eu queria o meu último poema, Que fosse terno dizendo as coisas mais simples e menos intencionais",
+    "Quero viver d’esperança, Quero tremer e sentir!",
+    "Faço rimas com, Consoantes de apoio.",
+    "Prezo a velocidade das tartarugas mais que a dos mísseis."
+  ];
+
+  /* ----- Estado ----- */
+  let currentIndex = 0;
+  let words = []; // array {id, text}
+  let correctWordsText = [];
+  let roundMoves = 0;
+  let totalMoves = 0;
+  let score = 0;
+  let roundScored = false;
+
+  /* Drag state (kept in closure) */
+  let draggingEl = null;
+  let draggingIndex = null;
+  let ghost = null;
+  let placeholder = null;
+
+  /* Ghost rAF throttle */
+  let _ghostX = 0, _ghostY = 0, _ghostRAF = false;
+
+  /* DOM refs */
+  const container = document.getElementById('words');
+  const roundNumEl = document.getElementById('roundNum');
+  const roundTotalEl = document.getElementById('roundTotal');
+  const roundMovesEl = document.getElementById('roundMoves');
+  const totalMovesEl = document.getElementById('totalMoves');
+  const scoreEl = document.getElementById('score');
+  const msg = document.getElementById('msg');
+
+  /* Utility: create ghost & placeholder lazily */
+  function ensureGhost(){
+    if(!ghost){
+      ghost = document.createElement('div');
+      ghost.className = 'ghost';
+      document.body.appendChild(ghost);
+    }
+  }
+  function ensurePlaceholder(){
+    if(!placeholder){
+      placeholder = document.createElement('div');
+      placeholder.className = 'placeholder';
+    }
+  }
+
+  /* Ghost move with requestAnimationFrame */
+  function scheduleGhostMove(x,y){
+    _ghostX = x; _ghostY = y;
+    if(_ghostRAF) return;
+    _ghostRAF = true;
+    requestAnimationFrame(() => {
+      if(ghost){
+        ghost.style.transform = `translate3d(${_ghostX + 12}px, ${_ghostY + 12}px, 0)`;
+      }
+      _ghostRAF = false;
+    });
+  }
+
+  /* Render list of words (clean, accessible) */
+  function render(){
+    container.innerHTML = '';
+    words.forEach((w,i) => {
+      const el = document.createElement('div');
+      el.className = 'word';
+      el.setAttribute('role','listitem');
+      el.setAttribute('tabindex','0');
+      el.setAttribute('data-id', w.id);
+      el.setAttribute('data-index', i);
+      el.setAttribute('aria-grabbed','false');
+      el.textContent = w.text;
+      // keyboard support
+      el.addEventListener('keydown', onWordKeyDown);
+      // pointerdown delegated below by container, but add pointer cursor
+      container.appendChild(el);
+    });
+  }
+
+  /* Fisher-Yates shuffle */
+  function shuffle(arr){
+    for(let i = arr.length - 1; i > 0; i--){
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+  }
+
+  /* Load round (phrase) */
+  function loadRound(index){
+    currentIndex = Math.max(0, Math.min(index, phrases.length - 1));
+    const phrase = phrases[currentIndex];
+    correctWordsText = phrase.split(' ');
+    words = correctWordsText.map((t,i) => ({ id: `${currentIndex}-${i}-${t}`, text: t }));
+    shuffle(words);
+    roundMoves = 0;
+    roundScored = false;
+    updateUI();
+    render();
+    msg.textContent = `Rodada ${currentIndex + 1} carregada (embaralhada).`;
+  }
+
+  /* Update panels */
+  function updateUI(){
+    roundNumEl.textContent = currentIndex + 1;
+    roundTotalEl.textContent = phrases.length;
+    roundMovesEl.textContent = roundMoves;
+    totalMovesEl.textContent = totalMoves;
+    scoreEl.textContent = score;
+  }
+
+  /* Distance helper */
+  function dist(ax,ay,bx,by){ const dx = ax - bx, dy = ay - by; return Math.hypot(dx,dy); }
+
+  /* Find best slot index based on coordinates (excludes draggingEl) */
+  function findClosestSlot(px, py){
+    const items = Array.from(container.querySelectorAll('.word')).filter(el => el !== draggingEl);
+    if(items.length === 0) return 0;
+    const slots = [];
+    const firstRect = items[0].getBoundingClientRect();
+    slots.push({index:0, x:firstRect.left - 10, y:firstRect.top + firstRect.height / 2});
+    for(let i = 0; i < items.length; i++){
+      const r = items[i].getBoundingClientRect();
+      slots.push({index: i+1, x: r.right + 10, y: r.top + r.height/2});
+    }
+    let best = slots[0], bestDist = dist(px,py,best.x,best.y);
+    for(const s of slots){
+      const d = dist(px,py,s.x,s.y);
+      if(d < bestDist){ bestDist = d; best = s; }
+    }
+    return best.index;
+  }
+
+  /* Show placeholder at slot index (index among items excluding draggingEl) */
+  function showPlaceholderAt(slotIndex){
+    ensurePlaceholder();
+    if(placeholder.parentElement) placeholder.parentElement.removeChild(placeholder);
+    const items = Array.from(container.querySelectorAll('.word')).filter(el => el !== draggingEl);
+    if(slotIndex <= 0) container.insertBefore(placeholder, items[0] || null);
+    else if(slotIndex >= items.length) container.appendChild(placeholder);
+    else container.insertBefore(placeholder, items[slotIndex]);
+  }
+
+  /* pointer handlers (we'll attach pointerdown at container and filter) */
+  function onPointerDown(e){
+    const el = e.target.closest('.word');
+    if(!el || !container.contains(el)) return;
+    // start drag
+    e.preventDefault();
+    draggingEl = el;
+    draggingIndex = Number(el.dataset.index);
+    el.classList.add('dragging');
+    el.setAttribute('aria-grabbed','true');
+
+    ensureGhost();
+    ghost.textContent = el.textContent;
+    scheduleGhostMove(e.clientX, e.clientY);
+
+    ensurePlaceholder();
+
+    try{ el.setPointerCapture(e.pointerId); } catch(_) {}
+    // add move/up handlers on the element to ensure proper capture
+    el.addEventListener('pointermove', onPointerMove);
+    el.addEventListener('pointerup', onPointerUp);
+    el.addEventListener('lostpointercapture', onPointerUp);
+  }
+
+  function onPointerMove(e){
+    scheduleGhostMove(e.clientX, e.clientY);
+    const slot = findClosestSlot(e.clientX, e.clientY);
+    showPlaceholderAt(slot);
+  }
+
+  /* Fix for index mapping: compute index among container.children excluding draggingEl */
+  function onPointerUp(e){
+    // release capture safely
+    try{ draggingEl && draggingEl.releasePointerCapture(e.pointerId); } catch(_){}
+    if(!draggingEl) return;
+
+    draggingEl.removeEventListener('pointermove', onPointerMove);
+    draggingEl.removeEventListener('pointerup', onPointerUp);
+    draggingEl.removeEventListener('lostpointercapture', onPointerUp);
+    draggingEl.classList.remove('dragging');
+    draggingEl.setAttribute('aria-grabbed','false');
+
+    // compute newIndex among children excluding draggingEl
+    const childrenExcluding = Array.from(container.children).filter(c => c !== draggingEl);
+    let newIndex = childrenExcluding.indexOf(placeholder);
+    if(newIndex === -1) newIndex = childrenExcluding.length; // appended at end
+
+    // update words array: remove original and insert at newIndex
+    const originalIndex = draggingIndex;
+    const item = words.splice(originalIndex, 1)[0];
+
+    // final index should be between 0..words.length after removal
+    let finalIndex = Math.max(0, Math.min(newIndex, words.length));
+    words.splice(finalIndex, 0, item);
+
+    // cleanup placeholder & ghost
+    if(placeholder && placeholder.parentElement) placeholder.parentElement.removeChild(placeholder);
+    if(ghost) ghost.style.transform = 'translate3d(-9999px,-9999px,0)';
+
+    // detect if moved
+    const newPos = words.findIndex(w => w.id === item.id);
+    const moved = (newPos !== originalIndex);
+    if(moved){
+      roundMoves++;
+      totalMoves++;
+    }
+
+    // re-render and reset drag state
+    render();
+    updateUI();
+    msg.textContent = moved ? 'Movimento registrado.' : 'Sem alteração na posição.';
+
+    draggingEl = null;
+    draggingIndex = null;
+  }
+
+  /* keyboard support to move focused word left/right with Ctrl+Arrow */
+  function onWordKeyDown(e){
+    const el = e.currentTarget;
+    const idx = Number(el.dataset.index);
+    if(e.ctrlKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')){
+      e.preventDefault();
+      const dir = e.key === 'ArrowLeft' ? -1 : 1;
+      const newIndex = Math.max(0, Math.min(words.length - 1, idx + dir));
+      if(newIndex === idx) return;
+      const item = words.splice(idx,1)[0];
+      words.splice(newIndex, 0, item);
+      roundMoves++;
+      totalMoves++;
+      render();
+      updateUI();
+      // keep focus on moved item
+      const movedEl = Array.from(container.querySelectorAll('.word'))[newIndex];
+      movedEl && movedEl.focus();
+      msg.textContent = `Movido para ${newIndex + 1}.`;
+    }
+  }
+
+  /* check correctness */
+  function check(){
+    if(roundScored){
+      msg.textContent = 'Pontuação já contabilizada nesta rodada.';
+      return;
+    }
+    const cur = words.map(w => w.text).join(' ');
+    const correct = correctWordsText.join(' ');
+    if(cur === correct){
+      score += correctWordsText.length;
+      roundScored = true;
+      msg.textContent = `✅ Rodada correta! Pontos somados. Movimentos nesta rodada: ${roundMoves}.`;
+      updateUI();
+    } else {
+      msg.textContent = '❌ Ainda não está igual — continue!';
+    }
+  }
+
+  /* navigation */
+  function nextRound(){
+    if(currentIndex < phrases.length - 1){
+      currentIndex++;
+      loadRound(currentIndex);
+    } else {
+      msg.textContent = `🏁 Fim! Total de movimentos: ${totalMoves}.`;
+    }
+  }
+  function prevRound(){
+    if(currentIndex > 0){
+      currentIndex--;
+      loadRound(currentIndex);
+    }
+  }
+
+  /* Attach delegated pointerdown on container */
+  container.addEventListener('pointerdown', onPointerDown);
+
+  /* Buttons */
+  document.getElementById('nextBtn').addEventListener('click', nextRound);
+  document.getElementById('prevBtn').addEventListener('click', prevRound);
+  document.getElementById('checkBtn').addEventListener('click', check);
+
+  /* Initialization */
+  function init(){
+    roundTotalEl.textContent = phrases.length;
+    loadRound(0);
+  }
+  init();
+
+  /* cleanup on unload (good practice) */
+  window.addEventListener('beforeunload', () => {
+    if(ghost && ghost.parentElement) ghost.parentElement.removeChild(ghost);
+    if(placeholder && placeholder.parentElement) placeholder.parentElement.removeChild(placeholder);
+  });
+
+})();
+</script>
+</body>
+</html>
